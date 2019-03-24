@@ -37,29 +37,30 @@
 </template>
 
 <script>
-import { isvalidUsername } from '@/utils/validate'
-
+// import { isvalidUsername } from '@/utils/validate'
+import request from '@/utils/request'
+import md5 from 'md5'
 export default {
   name: 'Login',
   data() {
     const validateUsername = (rule, value, callback) => {
-      if (!isvalidUsername(value)) {
+      if (!value) {
         callback(new Error('请输入正确的用户名'))
       } else {
         callback()
       }
     }
     const validatePass = (rule, value, callback) => {
-      if (value.length < 5) {
-        callback(new Error('密码不能小于5位'))
+      if (value.length < 6) {
+        callback(new Error('密码不能小于6位'))
       } else {
         callback()
       }
     }
     return {
       loginForm: {
-        username: 'admin',
-        password: 'admin'
+        username: '10322l25gW',
+        password: '123456'
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -90,10 +91,16 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('Login', this.loginForm).then(() => {
+          let {username, password} = this.loginForm
+          let passwordMd5 = md5(password)
+          let params = {
+            account: username,
+            password: passwordMd5
+          }
+          this.$store.dispatch('Login', params).then((res) => {
             this.loading = false
             this.$router.push({ path: this.redirect || '/' })
-          }).catch(() => {
+          }).catch((err) => {
             this.loading = false
           })
         } else {

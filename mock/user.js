@@ -26,13 +26,12 @@ const users = {
 
 export default {
   login: res => {
-    const { username } = JSON.parse(res.body)
-    const data = tokens[username]
-
-    if (data) {
+    const { account } = JSON.parse(res.body)
+    console.log('username', account)
+    if (account) {
       return {
         code: 20000,
-        data
+        account
       }
     }
     return {
