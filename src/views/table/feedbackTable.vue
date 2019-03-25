@@ -34,6 +34,7 @@
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
 // import { fetchList, fetchPv, createArticle, updateArticle } from '@/api/article'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 let list = {
@@ -62,6 +63,7 @@ let list = {
 export default {
   name: 'questionTable',
   components: { Pagination },
+  
   data() {
     return {
       search: '',
@@ -75,27 +77,34 @@ export default {
       },
       listQuery: {
         page: 1,
-        pageSize: 20,
-        sourceType: 1, // 资源类型   1-中国欧盟，2-中国韩国
-        content: '', // 搜索内容
-        // sort: '+id'
+        pageSize: 10
       },
       downloadLoading: false
     }
+  },
+   computed: {
+    ...mapGetters([
+      'items',
+      'listQuerys',
+      'totals'
+    ])
   },
   created() {
     this.getList()
   },
   methods: {
     getList() {
+      let params = {
+        listQuery: this.listQuery,
+        fetchUrl: '/sys/feedback/list'
+      }
       this.listLoading = true
-      setTimeout(() => {
-        this.list = list.items
-        this.total = 100
-        setTimeout(() => {
-          this.listLoading = false
-        }, 1.5 * 1000)
-      }, 1000)
+      this.$store.dispatch("GetList", params).then( res => {
+        this.listLoading = false
+        this.listQuery = this.listQuerys
+        this.total = this.totals
+        this.list = this.items
+      })
     }
   }
 }

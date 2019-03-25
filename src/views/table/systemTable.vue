@@ -55,33 +55,34 @@
     </el-table>
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :pageSize.sync="listQuery.pageSize" @pagination="getList" />
     <el-dialog :title="`${textMap[dialogStatus]}管理员`" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :rules="rules" :model="tempAdminData" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
-        <el-form-item :label="$t('table.adminId')" prop="adminId">
-          <el-input v-model="tempAdminData.adminId"/>
+      <el-form ref="dataForm" :rules="rules" :model="dataForm" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
+        <el-form-item :label="$t('table.adminType')" prop="adminType">
+          <template>
+              <el-radio v-model="adminType" label="1">超级管理员</el-radio>
+              <el-radio v-model="adminType" label="2">管理员</el-radio>
+          </template>
         </el-form-item>
-        <el-form-item :label="$t('table.account')" prop="account">
-          <el-input v-model="tempAdminData.account"/>
-        </el-form-item>
+        
         <el-form-item :label="$t('table.adminName')" prop="adminName">
-          <el-input v-model="tempAdminData.adminName"/>
+          <el-input v-model="dataForm.adminName"/>
         </el-form-item>
         <el-form-item :label="$t('table.adminPhone')" prop="adminPhone">
-          <el-input v-model="tempAdminData.adminPhone"/>
+          <el-input v-model="dataForm.adminPhone"/>
         </el-form-item>
         <el-form-item :label="$t('table.adminPassword')" prop="adminPassword">
-          <el-input v-model="tempAdminData.adminPassword"/>
+          <el-input v-model="dataForm.adminPassword"/>
         </el-form-item>
-         <el-form-item :label="$t('table.isDelete')" prop="isDelete">
+         <el-form-item :label="$t('table.isDelete')" prop="status">
            <!-- 是否禁用 -->
           <el-switch
-            v-model="tempAdminData.status"
-            active-color="#13ce66"
-            inactive-color="#ff4949">
+            v-model="switchValue"
+            active-text="启用"
+            inactive-text="禁用">
           </el-switch>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false;tempAdminData={}">{{ $t('table.cancel') }}</el-button>
+        <el-button @click="dialogFormVisible = false;">{{ $t('table.cancel') }}</el-button>
         <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">{{ $t('table.confirm') }}</el-button>
       </div>
     </el-dialog>
@@ -91,26 +92,9 @@
 <script>
 // import { fetchList, fetchPv, createArticle, updateArticle } from '@/api/article'
 // import { parseTime } from '@/utils'
+import { mapGetters } from 'vuex'
 import moment from 'moment'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
-let listCompany = {
-        total: 20,
-        items: [
-          {
-            "adminId": 1001,
-            "account": "dafdsa455",
-            "adminName": "admin",
-            "adminPhone": "13974999769",
-            "adminPassword": '********',
-            lastLoginTime: "2019-03-21 18:35:23",
-            "status": 1,
-            "createTime": 45546456,
-            "adminType": 1
-          }
-        ]
-      }
-
-
 export default {
   name: 'systemTable',
   components: { Pagination },
@@ -120,13 +104,25 @@ export default {
       tableKey: 0,
       list: [],
       total: 0,
+      adminType: '1',
+      dataForm: {
+        "adminName": "admin",
+        "adminPhone": "13974999769",
+        "adminPassword": "dsafdasfd",
+        "status": 1,
+        "adminType": 2
+      },
+      switchValue: true,
       listLoading: true,
       listQuery: {
         page: 1,
         pageSize: 20,
-        sourceType: 1, // 资源类型   1-中国欧盟，2-中国韩国
-        content: '', // 搜索内容
-        // sort: '+id'
+        sourceType: 1,
+        content: ''
+      },
+      adminTypeMap: {
+        1: "管理员",
+        2: "超级管理员"
       },
       tempAdminData: {
         // 添加管理员信息
@@ -153,19 +149,29 @@ export default {
       dialogImageUrl: 'http://source.zouzhengming.com/MSg6YdvsFb8FDCZRStziw.jpg'
     }
   },
+  computed: {
+    ...mapGetters([
+      'items',
+      'listQuerys',
+      'totals'
+    ])
+  },
   created() {
     this.getList()
   },
   methods: {
     getList() {
+      let params = {
+        listQuery: this.listQuery,
+        fetchUrl: '/sys/admin/list'
+      }
       this.listLoading = true
-      setTimeout(() => {
-        this.list = listCompany.items
-        this.total = 20
-        setTimeout(() => {
-          this.listLoading = false
-        }, 1.5 * 1000)
-      }, 1000)
+      this.$store.dispatch("GetList", params).then( res => {
+        this.listLoading = false
+        this.listQuery = this.listQuerys
+        this.total = this.totals
+        this.list = this.items
+      })
     },
     handleFilter() {
       this.listQuery.page = 1
@@ -202,16 +208,7 @@ export default {
     handleCreate() {
       this.dialogStatus = 'create'
       this.dialogFormVisible = true
-      this.tempAdminData =  {
-        // 添加管理员信息
-        // "adminId": 1001,
-        // "account": "dafdsa455",
-        // "adminName": "admin",
-        // "adminPhone": "13974999769",
-        // "status": 1,
-        // "adminPassword": "1234442",
-        // "adminType": 1
-      }
+      
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
@@ -219,15 +216,24 @@ export default {
     createData() {
       this.temp = {};
       this.tempAdminData={}
+      this.dataForm.status = this.switchValue ? 1 : 2
+      this.dataForm.adminType = this.adminType
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          this.dialogFormVisible = false
-          this.$notify({
+          let params = {
+            data: this.dataForm,
+            fetchUrl: '/sys/admin/add'
+          }
+          this.$store.dispatch("AddMembers", params).then( res => {
+            this.dialogFormVisible = false
+            this.$notify({
               title: '成功',
-              message: '创建成功',
+              message: `创建${this.adminTypeMap[this.dataForm.adminType]}成功`,
               type: 'success',
               duration: 2000
             })
+            this.getList()
+          })
         }
       })
     },

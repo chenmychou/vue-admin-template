@@ -27,9 +27,8 @@ import '@/icons' // icon
  */
 // import '../mock' // simulation data
 
-Vue.use(ElementUI, { locale })
 Vue.use(ElementUI, {
-  size: Cookies.get('size') || 'medium', // set element-ui default size
+  size: Cookies.set('size') || 'medium', // set element-ui default size
   locale,
   i18n: (key, value) => i18n.t(key, value)
 })
