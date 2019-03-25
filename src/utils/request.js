@@ -12,9 +12,7 @@ const service = axios.create({
 // request拦截器
 service.interceptors.request.use(
   config => {
-    console.log('store.getters==>>', store.getters.token)
     if (store.getters.token) {
-      console.log('store.getters==>>', store.getters)
       config.headers['token'] = getToken() // 让每个请求携带自定义token 请根据实际情况自行修改
     }
     return config
@@ -51,13 +49,14 @@ service.interceptors.response.use(
             type: 'warning'
           }
         ).then(() => {
-          store.dispatch('FedLogOut').then(() => {
+          store.dispatch('FedLoginOut').then(() => {
             location.href="#/login"
             location.reload() // 为了重新实例化vue-router对象 避免bug
           })
         })
       }
-      if (res.code === '500') {
+      console.log('res======', res.code)
+      if (Number(res.code) >= 500) {
         MessageBox.confirm(
           '服务器出错',
           {
@@ -66,7 +65,7 @@ service.interceptors.response.use(
             type: 'warning'
           }
         ).then(() => {
-          store.dispatch('FedLogOut').then(() => {
+          store.dispatch('FedLoginOut').then(() => {
             location.href="#/login"
             location.reload() // 为了重新实例化vue-router对象 避免bug
           })

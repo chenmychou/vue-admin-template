@@ -1,9 +1,9 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-button class="filter-item" style="margin-left: 10px;" type="danger" icon="el-icon-edit" @click="handleCreate">{{ $t('table.addAdmin') }}</el-button>
-      <el-input v-model="listQuery.title" :placeholder="$t('table.title')" style="width: 300px;float:right">
-        <el-button slot="append" icon="el-icon-search" type="success" @keyup.enter.native="handleFilter" />
+      <el-button v-if="curAdminType === '1'" class="filter-item" style="margin-left: 10px;" type="danger" icon="el-icon-edit" @click="handleCreate">{{ $t('table.addAdmin') }}</el-button>
+      <el-input v-model="listQuery.content" :placeholder="$t('table.title')" style="width: 300px;float:right">
+        <el-button slot="append" icon="el-icon-search" type="success" @click="handleFilter" />
       </el-input>
     </div>
     <el-table
@@ -13,8 +13,7 @@
       border
       fit
       highlight-current-row
-      style="width: 100%;margin-top: 8px"
-      @sort-change="sortChange">
+      style="width: 100%;margin-top: 8px">
       <el-table-column :label="$t('table.adminId')" align="center" width="65">
         <template slot-scope="scope">
           <span>{{ scope.row.adminId }}</span>
@@ -35,15 +34,9 @@
           <span>{{ scope.row.lastLoginTime }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.status')" align="center">
+      <el-table-column :label="$t('table.isDelete')" align="center">
         <template slot-scope="scope">
-          <span>
-            <el-switch
-              v-model="scope.row.status === 1"
-              active-color="#13ce66"
-              inactive-color="#ff4949">
-            </el-switch>
-          </span>
+          <span>{{ scope.row.status === 1 ? "启用" : "禁用" }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.actions')" align="center" width="300" class-name="small-padding fixed-width">
@@ -90,10 +83,10 @@
 </template>
 
 <script>
-// import { fetchList, fetchPv, createArticle, updateArticle } from '@/api/article'
-// import { parseTime } from '@/utils'
 import { mapGetters } from 'vuex'
 import moment from 'moment'
+import {getAdminRole} from '@/utils/auth'
+import { Message, MessageBox } from 'element-ui'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 export default {
   name: 'systemTable',
@@ -104,20 +97,20 @@ export default {
       tableKey: 0,
       list: [],
       total: 0,
-      adminType: '1',
+      curAdminType: getAdminRole(),
+      adminType: '2',
       dataForm: {
-        "adminName": "admin",
-        "adminPhone": "13974999769",
-        "adminPassword": "dsafdasfd",
+        "adminName": "",
+        "adminPhone": "",
+        "adminPassword": "",
         "status": 1,
-        "adminType": 2
+        "adminType": '2'
       },
       switchValue: true,
       listLoading: true,
       listQuery: {
         page: 1,
         pageSize: 20,
-        sourceType: 1,
         content: ''
       },
       adminTypeMap: {
@@ -174,7 +167,6 @@ export default {
       })
     },
     handleFilter() {
-      this.listQuery.page = 1
       this.getList()
     },
     handleCheckDetail(row, status) {
@@ -184,26 +176,31 @@ export default {
     checkDetailSubmit () {
       this.checkDetailVisible = false
     },
-    handleModifyStatus(row, status) {
-      this.$message({
-        message: '操作成功',
-        type: 'success'
-      })
-      row.status = status
-    },
-    sortChange(data) {
-      const { prop, order } = data
-      if (prop === 'uid') {
-        this.sortByID(order)
-      }
-    },
-    sortByID(order) {
-      if (order === 'ascending') {
-        this.listQuery.sort = '+uid'
-      } else {
-        this.listQuery.sort = '-uid'
-      }
-      this.handleFilter()
+    handleModifyStatus(row) {
+      // /sys/admin/delete?adminId=1001
+      MessageBox.confirm(
+          '确定要删除该管理员吗？',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        ).then(() => {
+          let params = {
+            data: {},
+            fetchUrl: '/sys/admin/delete?adminId=' + row.adminId
+          }
+          this.$store.dispatch("DeleteMembers", params).then( res => {
+            this.$notify({
+              title: '成功',
+              message: '操作成功',
+              type: 'success',
+              duration: 2000
+            })
+            this.getList()
+          })
+        })
+      
     },
     handleCreate() {
       this.dialogStatus = 'create'
@@ -239,7 +236,9 @@ export default {
     },
     handleUpdate(row) {
       console.log('rowwww', row)
-      this.tempAdminData = Object.assign({}, row) // copy obj
+      this.dataForm = Object.assign({}, row) // copy obj
+      this.switchValue = row.status === 1 ? true : false
+      this.adminType = row.adminType + ''
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
       this.$nextTick(() => {
@@ -247,15 +246,24 @@ export default {
       })
     },
     updateData() {
+      this.dataForm.status = this.switchValue ? 1 : 2
+      this.dataForm.adminType = this.adminType
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          this.dialogFormVisible = false
+          let params = {
+            data: this.dataForm,
+            fetchUrl: '/sys/admin/edit'
+          }
+          this.$store.dispatch("EditMembers", params).then( res => {
+            this.dialogFormVisible = false
             this.$notify({
               title: '成功',
-              message: '更新成功',
+              message: `更新成功`,
               type: 'success',
               duration: 2000
             })
+            this.getList()
+          })
         }
       })
     },

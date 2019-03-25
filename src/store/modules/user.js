@@ -1,18 +1,18 @@
 import { login, logout, getInfo } from '@/api/login'
-import { getToken, setToken, removeToken } from '@/utils/auth'
+import { getToken, setToken, removeToken, getAdminRole, setAdminRole, removeAdminRole } from '@/utils/auth'
 
 const user = {
   state: {
     token: getToken(),
     name: '',
     avatar: '',
-    roles: []
+    roles: '',
+    adminType: ''
   },
 
   mutations: {
     SET_TOKEN: (state, token) => {
       state.token = token
-      console.log('actionss ---->', token)
     },
     SET_NAME: (state, name) => {
       state.name = name
@@ -22,20 +22,26 @@ const user = {
     },
     SET_ROLES: (state, roles) => {
       state.roles = roles
-    }
+    },
+    SET_ADMIN_TYPE: (state, data) => {
+      state.adminType = data
+    },
   },
 
   actions: {
     // 登录
-    Login({ commit }, userInfo) {
+    LoginAdmin({ commit }, userInfo) {
       const username = userInfo.account.trim()
       return new Promise((resolve, reject) => {
         login(username, userInfo.password).then(response => {
-          console.log('ressss in user action', response)
           const data = response.data
           setToken(data.token)
+          setAdminRole(data.adminType)
           commit('SET_TOKEN', data.token)
-          resolve()
+          commit('SET_ADMIN_TYPE', data.adminType)
+          commit('SET_ROLES', data.adminType === 1 ? "超级管理员" : "管理员")
+          commit('SET_NAME', data.adminName)
+          resolve(data)
         }).catch(error => {
           reject(error)
         })

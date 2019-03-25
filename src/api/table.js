@@ -16,16 +16,32 @@ export function addMembers(params) {
     data: params.data
   })
 }
-export function deleteMembers(params) {
-  // 删除
+export function editMembers(params) {
+  // 编辑
   return request({
     url: params.fetchUrl,
     method: 'post',
     data: params.data
   })
 }
+export function deleteMembers(params) {
+  // 删除
+  return request({
+    url: params.fetchUrl,
+    method: 'get',
+    data: params.data
+  })
+}
 export function getDetail(params) {
   // 详情
+  return request({
+    url: params.fetchUrl,
+    method: 'post',
+    data: params.data
+  })
+}
+export function allowAccess(params) {
+  // 审核
   return request({
     url: params.fetchUrl,
     method: 'post',

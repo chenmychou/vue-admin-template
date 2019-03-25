@@ -4,6 +4,14 @@
       <el-button size="large" v-for="tab in tabs" :class="tab.active? 'tab_active' : ''" :key="tab.kinds" @click="changeTab(tab)">{{ tab.tabName }}</el-button>
     </el-row>
     <div class="filter-container">
+      <template>
+        <el-radio v-model="allowStatus" label="0">待审核</el-radio>
+        <el-radio v-model="allowStatus" label="1">审核通过</el-radio>
+        <el-radio v-model="allowStatus" label="2">审核失败</el-radio>
+      </template>
+        <div style="margin-top: 20px">
+        </div>
+      <el-button v-if="allowStatus === '0'" size="mini" type="success" @click="oneKeyAllowed">一键审核</el-button>
       <el-input v-model="listQuery.title" :placeholder="$t('table.title')" style="width: 300px;float:right;margin-bottom: 20px">
         <el-button slot="append" icon="el-icon-search" type="success" @click="handleFilter" />
       </el-input>
@@ -16,8 +24,7 @@
       border
       fit
       highlight-current-row
-      style="width: 100%;margin-top: 8px"
-      @sort-change="sortChange">
+      style="width: 100%;margin-top: 8px">
       <el-table-column :label="$t('table.userName')" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.userName }}</span>
@@ -40,17 +47,24 @@
       </el-table-column>
       <el-table-column :label="$t('table.isAnswer')" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.questionZhuanjiaComments || '否' }}</span>
+          <span v-if="scope.row.questionZhuanjiaComments > 0">是</span>
+          <span v-if="scope.row.questionZhuanjiaComments === 0">否</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.isOpen')" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.isOpen || '否'  }}</span>
+          <span v-if="scope.row.isOpen === 1">是</span>
+          <span v-if="scope.row.isOpen === 0">否</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.questionStatus')" align="center">
+      <el-table-column :label="$t('table.questionStatus')" align="center" width="180">
         <template slot-scope="scope">
-          <span>{{ scope.row.questionStatus }}</span>
+          <div v-if="scope.row.questionStatus === 0">
+            <el-button size="mini" type="success" @click="questionStatusChange(scope.row.questionId, 1)">通过</el-button>
+            <el-button size="mini" type="info" @click="questionStatusChange(scope.row.questionId, 2)">不通过</el-button>
+          </div>
+          <span v-if="scope.row.questionStatus === 1">审核通过</span>
+          <span v-if="scope.row.questionStatus === 2">审核失败</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.questionTime')" align="center" width="100">
@@ -60,8 +74,8 @@
       </el-table-column>
       <el-table-column :label="$t('table.actions')" align="center" width="300" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button type="primary" size="mini" style="width:80px" @click="handleCommetList(scope.row)">{{ $t('table.commetsList') }}</el-button>
-          <el-button size="mini" type="success" style="width:80px" @click="handleCheckDetail(scope.row,'checkItem')">{{ $t('table.questionDetail') }}
+          <el-button type="primary" size="mini" style="width:90px" @click="handleCommetList(scope.row)">{{ $t('table.commetsList') }}</el-button>
+          <el-button size="mini" type="success" style="width:90px" @click="handleCheckDetail(scope.row,'checkItem')">{{ $t('table.questionDetail') }}
           </el-button>
           <el-button size="mini" type="danger" @click="handleModifyStatus(scope.row,'deleted')">{{ $t('table.delete') }}</el-button>
         </template>
@@ -75,8 +89,7 @@
       border
       fit
       highlight-current-row
-      style="width: 100%;margin-top: 8px"
-      @sort-change="sortChange">
+      style="width: 100%;margin-top: 8px">
       <el-table-column :label="$t('table.userName')" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.userName }}</span>
@@ -92,12 +105,17 @@
           <span>{{ scope.row.createTime }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.commetStatus')" align="center">
+      <el-table-column :label="$t('table.commetStatus')" align="center" width="180">
         <template slot-scope="scope">
-          <span>{{ scope.row.status }}</span>
+          <div v-if="scope.row.status === 0">
+            <el-button size="mini" type="success" @click="questionStatusChange(scope.row.commentId, 1)">通过</el-button>
+            <el-button size="mini" type="info" @click="questionStatusChange(scope.row.commentId, 2)">不通过</el-button>
+          </div>
+          <span v-if="scope.row.status === 1">审核通过</span>
+          <span v-if="scope.row.status === 2">审核失败</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.actions')" align="center" class-name="small-padding fixed-width">
+      <el-table-column :label="$t('table.actions')" align="center" class-name="small-padding fixed-width" min-width="100">
         <template slot-scope="scope">
           <el-button size="mini" type="success" style="width:80px" @click="handleCheckDetail(scope.row,'checkItem')">{{ $t('table.commetDetail') }}
           </el-button>
@@ -171,76 +189,8 @@
 <script>
 // import { fetchList, fetchPv, createArticle, updateArticle } from '@/api/article'
 // import { parseTime } from '@/utils'
+import { mapGetters } from 'vuex'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
-let list = {
-        total: 3,
-        items: [
-          {
-            "questionId": 1001,
-            "userId": "1001",
-            "userType": 3,
-            "questionZhuanjiaComments": 10, // 大于0 已回答
-            "isOpen": 1,
-            "pics": "aaa.jpg,bbb.png",
-            createTime: "2019-03-24 12:30:23",
-            "questionStatus": 1,
-            "userName": "老楚",
-            "userTitle": "ceo啊",
-            "companyName": "湖南牛逼互联网公司",
-            createTime: "2019-03-24 12:30:23",
-            content:'我是老楚  我牛不牛逼？'
-          },
-          {
-            "questionId": 1001,
-            "userId": "1001",
-            "userType": 3,
-            "questionZhuanjiaComments": 10, // 大于0 已回答
-            "isOpen": 1,
-            "pics": "aaa.jpg,bbb.png",
-            createTime: "2019-03-24 12:30:23",
-            "questionStatus": 1,
-            "userName": "老楚",
-            "userTitle": "ceo啊",
-            "companyName": "湖南牛逼互联网公司",
-            createTime: "2019-03-24 12:30:23",
-            content:'我是老楚  我牛不牛逼？'
-          },
-          {
-            "questionId": 1001,
-            "userId": "1001",
-            "userType": 3,
-            "questionZhuanjiaComments": 10, // 大于0 已回答
-            "isOpen": 1,
-            "pics": "aaa.jpg,bbb.png",
-            createTime: "2019-03-24 12:30:23",
-            "questionStatus": 1,
-            "userName": "老楚",
-            "userTitle": "ceo啊",
-            "companyName": "湖南牛逼互联网公司",
-            createTime: "2019-03-24 12:30:23",
-            content:'我是老楚  我牛不牛逼？'
-          }
-        ]
-      }
-let commentList = {
-  "total": 100,
-  "page": 1,
-  "pageSize": 10,
-  "items": [
-      {
-          "commentId": 1001,
-          "commentContent": "这条政策好",
-          "commentPics": "http://aa.baidu.com/aaa.jpg,http://aa.baidu.com/bbb.jpg",
-          "userId": 1001,
-          "userHeadImg": "http://aaa.baidu.com/jpg.com",
-          "userName": "张三",
-          "userType": 3,
-          "userTitle": "高级工程师",
-          "status": 1,
-          "createTime": 6456546
-      }
-  ]
-}
 export default {
   name: 'ComplexTable',
   components: { Pagination },
@@ -250,17 +200,20 @@ export default {
         { tabName: '问题列表', type: 1, active: true },
         { tabName: '评论列表', type: 2, active: false }
       ],
+      allowCheckValue: false,
+      allowStatus: '0',
       curTab: 1,
       search: '',
       tableKey: 0,
+      switchValue: false,
       list: [],
       commentList: [],
       total: 0,
       listLoading: true,
       listQuery: {
         page: 1,
-        pageSize: 20,
-        sourceType: 1, // 资源类型   1-中国欧盟，2-中国韩国
+        pageSize: 10,
+        "status": 0,
         content: '', // 搜索内容
         // sort: '+id'
       },
@@ -292,6 +245,19 @@ export default {
   created() {
     this.getList()
   },
+   computed: {
+    ...mapGetters([
+      'items',
+      'listQuerys',
+      'totals'
+    ]),
+  },
+  watch: {
+    allowStatus: function(val, ols) {
+      this.allowStatus = val
+      this.getList()
+    }
+  },
   methods: {
     changeTab(item) {
       let tempTabs = this.tabs
@@ -301,6 +267,37 @@ export default {
       item.active = true
       this.getList()
     },
+    oneKeyAllowed() {
+      // 一键审核
+      let tempIdList = []
+      this.list.map(item => {
+          tempIdList.push(item.questionId)
+      })
+      let examineIdList = tempIdList.join(',')
+      this.questionStatusChange(examineIdList, 1)
+    },
+    questionStatusChange(examineIdList, opType) {
+      let params = {
+        data: {
+          opType, // 操作类型（1-通过，2-不通过）
+          examineIdList, //数据id,多数据逗号分隔
+          "type": this.curTab //数据类型 1-咨询信息，2-评论
+        },
+        fetchUrl: "/sys/examine/op"
+      }
+      this.$store.dispatch("AllowAccess", params).then( res => {
+        this.$message({
+          message: "操作完成",
+          type: 'success'
+        })
+        this.getList()
+      }).catch(err => {
+        this.$message({
+          message: "操作失败",
+          type: 'info'
+        })
+      })
+    },
     globeSearch() {
       this.dialogStatus = 'highSearch'
       this.dialogFormVisible = true
@@ -308,29 +305,39 @@ export default {
         this.$refs['dataForm'].clearValidate()
       })
     },
-    getList() {
+    getList(id) {
       this.listLoading = true
-      setTimeout(() => {
         if (this.curTab === 1) {
-          this.list = list.items
+          // 问题列表数据
+          this.listQuery.status = this.allowStatus
+          let params = {
+            listQuery: this.listQuery,
+            fetchUrl: 'sys/question/list'
+          }
+          this.listLoading = true
+          this.$store.dispatch("GetList", params).then( res => {
+            this.listLoading = false
+            // this.listQuery = this.listQuerys
+            this.total = this.totals
+            this.list = this.items
+          })
         } else {
-          this.getCommetList()
+          // 评论列表数据
+          this.listQuery.status = this.allowStatus
+          this.listQuery.questionId = id || ''
+          let params = {
+            listQuery: this.listQuery,
+            fetchUrl: 'sys/comment/list'
+          }
+          console.log('paramss=====', params, id)
+          this.listLoading = true
+          this.$store.dispatch("GetList", params).then( res => {
+            this.listLoading = false
+            this.total = this.totals
+            this.commentList = this.items
+            this.listQuery.questionId = ''
+          })
         }
-        this.total = 100
-        setTimeout(() => {
-          this.listLoading = false
-        }, 200)
-      }, 200)
-    },
-    getCommetList() {
-      this.listLoading = true
-      setTimeout(() => {
-        this.commentList = commentList.items
-        this.total = 8
-        setTimeout(() => {
-          this.listLoading = false
-        }, 200)
-      }, 200)
     },
     handleFilter() {
       this.listQuery.page = 1
@@ -339,7 +346,6 @@ export default {
     handleCheckDetail(row, status) {
       // 拿详情数据
       this.checkDetailVisible = true
-      console.log('rowwwww', row)
       this.temp = Object.assign({}, row) // copy obj
     },
     checkDetailSubmit () {
@@ -352,20 +358,6 @@ export default {
         type: 'success'
       })
       row.status = status
-    },
-    sortChange(data) {
-      const { prop, order } = data
-      if (prop === 'uid') {
-        this.sortByID(order)
-      }
-    },
-    sortByID(order) {
-      if (order === 'ascending') {
-        this.listQuery.sort = '+uid'
-      } else {
-        this.listQuery.sort = '-uid'
-      }
-      this.handleFilter()
     },
     handleCreate() {
       this.dialogStatus = 'create'
@@ -398,6 +390,7 @@ export default {
       this.curTab = 2
       let tempTabs = this.tabs
       this.changeTab(tempTabs[1])
+      this.getList(row.questionId)
     },
     updateData() {
       this.$refs['dataForm'].validate((valid) => {

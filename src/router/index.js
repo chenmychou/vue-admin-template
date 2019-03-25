@@ -25,17 +25,25 @@ import Layout from '../views/layout/Layout'
 export const constantRouterMap = [
   { path: '/login', component: () => import('@/views/login/index'), hidden: true },
   { path: '/404', component: () => import('@/views/404'), hidden: true },
-
   {
     path: '/',
+    redirect: '/login',
+    name: 'login',
+    hidden: true
+  },
+  {
+    path: '/dashboard',
     component: Layout,
-    redirect: '/dashboard',
-    name: 'Dashboard',
-    hidden: true,
-    children: [{
-      path: 'dashboard',
-      component: () => import('@/views/dashboard/index')
-    }]
+    redirect: 'noredirect',
+    children: [
+      {
+        path: '',
+        component: () => import('@/views/dashboard/index'),
+        name: 'dashboard',
+        meta: { title: '首页', icon: 'dashboard' },
+        
+      }
+    ]
   },
   {
     path: '/european-table',

@@ -97,9 +97,9 @@ export default {
             account: username,
             password: passwordMd5
           }
-          this.$store.dispatch('Login', params).then((res) => {
+          this.$store.dispatch('LoginAdmin', params).then((res) => {
             this.loading = false
-            this.$router.push({ path: this.redirect || '/' })
+            this.$router.push({path: '/dashboard'})
           }).catch((err) => {
             this.loading = false
           })
