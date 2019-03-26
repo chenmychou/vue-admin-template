@@ -31,7 +31,7 @@
       </el-table-column>
       <el-table-column :label="$t('table.lastLoginTime')" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.lastLoginTime }}</span>
+          <span>{{ scope.row.lastLoginTime ? moment.unix(scope.row.lastLoginTime).format("YYYY-MM-DD hh:mm:ss"): '暂无'}}</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.isDelete')" align="center">
@@ -97,6 +97,7 @@ export default {
       tableKey: 0,
       list: [],
       total: 0,
+      moment: moment,
       curAdminType: getAdminRole(),
       adminType: '2',
       dataForm: {

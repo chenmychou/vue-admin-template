@@ -14,6 +14,7 @@
       </el-input> -->
     </div>
     <el-table
+      v-if="curTab === 1"
       v-loading="listLoading"
       :key="tableKey"
       :data="list"
@@ -21,37 +22,27 @@
       fit
       highlight-current-row
       style="width: 100%;">
-      <!-- <el-table-column :label="$t('table.id')" align="center" width="65">
-        <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
-        </template>
-      </el-table-column> -->
-      <el-table-column :label="$t('table.uid')" align="center" width="105">
+      <el-table-column :label="fieldData.list.uid" align="center" width="105">
         <template slot-scope="scope">
           <span>{{ scope.row.uid }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.chinaName')"  align="center" width="250">
+      <el-table-column :label="fieldData.list.chinaName"  align="center" width="250">
         <template slot-scope="scope">
           <span>{{ scope.row.chinaName }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.englishName')" align="center" width="350">
+      <el-table-column :label="fieldData.list.englishName" align="center" width="350">
         <template slot-scope="scope">
           <span>{{ scope.row.englishName }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.sourceCas')" align="center">
+      <el-table-column :label="fieldData.list.sourceCas" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.sourceCas }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.sourceCi')" align="center">
-        <template slot-scope="scope">
-          <span>{{ scope.row.sourceCi }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('table.chinaId')" align="center" width="100">
+      <el-table-column :label="fieldData.list.chinaId" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.chinaId }}</span>
         </template>
@@ -235,40 +226,146 @@ let list = {
         ]
       }
 const tabsU = [ // 欧盟
-    { tabName: '禁用成分', kinds: 1, active: true,
-      fields: [
-        {uid: "序号"},
-        {chinaName: "中文名"},
-        {sourceCas: "CAS号"},
-        {oumengUid: "欧盟编号"},
-        {chinaId: "中国编号"},
-        {remark: "备注"},
-        {chinaId: "中国序号"}
-      ]
-    },
-    { tabName: '限用成分', kinds: 2, active: false, 
-      fields: [
-        {uid: "序号"},
-        {chinaName: "中文名"},
-        {sourceCas: "CAS号"},
-        {oumengUid: "欧盟编号"},
-        {chinaId: "中国编号"},
-        {remark: "备注"},
-        {chinaId: "中国序号"}
-      ]
-    },
-    { tabName: '着色剂', kinds: 3, active: false },
+    { tabName: '禁用成分', kinds: 1, active: true},
+    { tabName: '限用成分', kinds: 2, active: false},
+    { tabName: '着色剂', kinds: 3, active: false},
     { tabName: '防腐剂', kinds: 4, active: false },
     { tabName: '防晒剂', kinds: 5, active: false }
   ]
 const tabsK = [ // 韩国
-    { tabName: '禁用成分', kinds: 1, active: true },
-    { tabName: '限用成分', kinds: 2, active: false },
-    { tabName: '用色素', kinds: 3, active: false },
-    { tabName: '防晒剂', kinds: 4, active: false },
-    { tabName: '染发剂', kinds: 5, active: false },
-    { tabName: '其他准用成分', kinds: 6, active: false }
+    { tabName: '禁用成分', kinds: 6, active: true },
+    { tabName: '限用成分', kinds: 7, active: false },
+    { tabName: '防晒剂', kinds: 8, active: false },
+    { tabName: '染发剂', kinds: 9, active: false },
+    { tabName: '其他准用成分', kinds: 10, active: false },
+    { tabName: '准用色素', kinds: 11, active: false }
   ]
+const fieldKinds1 = {
+  list: {
+    "uid": "欧盟序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCas": "CAS号",
+    "chinaId": "中国序号"
+  },
+  detail: {
+    "uid": "欧盟序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCas": "CAS号",
+    "chinaId": "中国序号",
+    "china": "中国",
+    "remark": "备注"
+  }
+}
+const fieldKinds2 = {
+  // 2,4,5
+  list: {
+    "uid": "欧盟序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCas": "CAS号",
+    "chinaId": "中国序号"
+  },
+  detail: {
+    "uid": "欧盟序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCas": "CAS号",
+    "chinaId": "中国序号",
+    "otherLimit": "欧盟限量",
+    "chinaLimit": "中国限量",
+    "remark": "备注"
+  }
+}
+const fieldKinds3 = {
+  list: {
+    "uid": "欧盟序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCi": "CI号",
+    "chinaId": "中国序号"
+  },
+  detail: {
+    "uid": "欧盟序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCi": "CI号",
+    "chinaId": "中国序号",
+    "other": "其他",
+    "sourceOdds": "其他化妆品",
+    "sourceEye": "除眼部之外",
+    "sourceMucous": "不与粘膜接触",
+    "sourceSkin": "皮肤暂时接触",
+    "remark": "备注"
+  }
+}
+const fieldKinds4 = fieldKinds2
+const fieldKinds5 = fieldKinds2
+const fieldKinds6 = {
+  list: {
+    "uid": "韩国序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCas": "CAS号",
+    "chinaId": "中国序号"
+  },
+  detail: {
+    "uid": "韩国序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCas": "CAS号",
+    "chinaId": "中国序号",
+    "other": "韩国",
+    "china": "中国",
+    "remark": "备注"
+  }
+}
+const fieldKinds7 = {
+  // 7， 8， 9，10
+  list: {
+    "uid": "韩国序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCas": "CAS号",
+    "chinaId": "中国序号"  
+  },
+  detail: {
+    "uid": "韩国序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCas": "CAS号",
+    "chinaId": "中国序号",
+    "remark": "备注",
+    "otherLimit": "韩国限量",
+    "chinaLimit": "中国限量",
+  }
+}
+const fieldKinds8 = fieldKinds7
+const fieldKinds9 = fieldKinds7
+const fieldKinds10 = fieldKinds7
+const fieldKinds11 = {
+  list: {
+    "uid": "韩国序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCi": "CI号",
+    "chinaId": "中国序号"
+  },
+  detail: {
+    "uid": "韩国序号",
+    "chinaName": "中文名",
+    "englishName": "英文名",
+    "sourceCi": "CI号",
+    "chinaId": "中国序号",
+    "other": "其他",
+    "sourceOdds": "其他化妆品",
+    "sourceEye": "除眼部之外",
+    "sourceMucous": "不与粘膜接触",
+    "sourceSkin": "皮肤暂时接触",
+    "remark": "备注"
+  }
+}
 export default {
   name: 'publicTable',
   components: { Pagination },
@@ -277,8 +374,10 @@ export default {
       tabs: this.$route.path === '/european-table' ? tabsU : tabsK,
       search: '',
       tableKey: 0,
+      curTab: this.$route.path === '/european-table' ? 1 : 6,
       list: [],
       total: 0,
+      fieldData: this.$route.path === '/european-table' ? fieldKinds1 : fieldKinds6,
       listLoading: true,
       listQuery: {
         page: 1,
@@ -333,6 +432,7 @@ export default {
   methods: {
     changeTab(item) {
       let tempTabs = this.tabs
+      this.curTab = item.kinds
       let temp = []
       this.tabs = tempTabs.map(tab => {tab.active = false;return tab;})
       item.active = true
@@ -422,6 +522,8 @@ export default {
     '$route': {
       handler: function(newVal, oldVal){
         this.tabs = newVal.path === '/european-table' ? tabsU : tabsK
+        this.curTab = newVal.path === '/european-table' ? 1 : 6
+        this.fieldData = newVal.path === '/european-table' ? fieldKinds1 : fieldKinds6
       },
       // 深度观察监听
       // deep: true
