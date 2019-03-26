@@ -141,19 +141,21 @@
           <span>{{ temp.companyName }}</span>
       </el-form-item>
       <el-form-item :label="$t('table.isAnswer')">
-          <span>{{ temp.isAnswer || '否' }}</span>
+          <span>{{ temp.questionZhuanjiaComments === 0 ? "否":'是' }}</span>
       </el-form-item>
       <el-form-item :label="$t('table.isOpen')">
-          <span>{{ temp.isOpen || '否'  }}</span>
+          <span>{{ temp.isOpen === 1 ? "否":'是'  }}</span>
       </el-form-item>
       <el-form-item :label="$t('table.questionStatus')">
-          <span>{{ temp.questionStatus }}</span>
+          <span v-if="temp.questionStatus === 0">待审核</span>
+          <span v-if="temp.questionStatus === 1">审核通过</span>
+          <span v-if="temp.questionStatus === 2">审核失败</span>
       </el-form-item>
       <el-form-item :label="$t('table.questionPics')">
           <span>{{ temp.pics }}</span>
       </el-form-item>
       <el-form-item :label="$t('table.questionTime')">
-          <span>{{ temp.createTime }}</span>
+        <span>{{ temp.createTime }}</span>
       </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -175,7 +177,32 @@
             <span>{{ temp.createTime }}</span>
         </el-form-item>
         <el-form-item :label="$t('table.commetStatus')" align="center">
-            <span>{{ temp.status }}</span>
+          <span v-if="temp.status === 0">待审核</span>
+          <span v-if="temp.status === 1">审核通过</span>
+          <span v-if="temp.status === 2">审核失败</span>
+        </el-form-item>
+        <el-form-item :label="$t('table.commentId')" align="center">
+            <span>{{ temp.commentId }}</span>
+        </el-form-item>
+        <el-form-item :label="$t('table.userHeadImg')" align="center" min-width="300">
+            <span>{{ temp.userHeadImg }}</span>
+        </el-form-item>
+        <el-form-item :label="$t('table.userHeadImg')" align="center">
+            <span>{{ temp.userHeadImg }}</span>
+        </el-form-item>
+        <el-form-item :label="$t('table.replyUserName')" align="center">
+            <span>{{ temp.replyUserName }}</span>
+        </el-form-item>
+        <el-form-item :label="$t('table.commentPics')" align="center">
+            <span v-if="temp.commentPics && temp.commentPics.length > 0">
+              <span v-for="(item, index) in temp.commentPics" style="width: 45%" :key="index"><img :src="item" alt=""></span>
+            </span>
+            <span v-else>
+              暂无图集
+            </span>
+        </el-form-item>
+        <el-form-item :label="$t('table.replyId')" align="center" min-width="300">
+            <span>{{ temp.replyId }}</span>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -190,6 +217,8 @@
 // import { fetchList, fetchPv, createArticle, updateArticle } from '@/api/article'
 // import { parseTime } from '@/utils'
 import { mapGetters } from 'vuex'
+import moment from 'moment'
+import { Message, MessageBox } from 'element-ui'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 export default {
   name: 'ComplexTable',
@@ -249,7 +278,8 @@ export default {
     ...mapGetters([
       'items',
       'listQuerys',
-      'totals'
+      'totals',
+      "detailData"
     ]),
   },
   watch: {
@@ -270,9 +300,16 @@ export default {
     oneKeyAllowed() {
       // 一键审核
       let tempIdList = []
-      this.list.map(item => {
+      if (this.curTab === 1) {
+        this.list.map(item => {
           tempIdList.push(item.questionId)
-      })
+        })
+      } else {
+        this.commentList.map(item => {
+          tempIdList.push(item.commentId)
+        })
+      }
+      
       let examineIdList = tempIdList.join(',')
       this.questionStatusChange(examineIdList, 1)
     },
@@ -329,7 +366,6 @@ export default {
             listQuery: this.listQuery,
             fetchUrl: 'sys/comment/list'
           }
-          console.log('paramss=====', params, id)
           this.listLoading = true
           this.$store.dispatch("GetList", params).then( res => {
             this.listLoading = false
@@ -345,19 +381,49 @@ export default {
     },
     handleCheckDetail(row, status) {
       // 拿详情数据
+      // /sys/question/detail
+      let tempUrl = this.curTab === 1 ? `/sys/question/detail?questionId=${row.questionId}` : `sys/comment/detail?commentId=${row.commentId}`
+
       this.checkDetailVisible = true
       this.temp = Object.assign({}, row) // copy obj
+      let params = {
+        data: {},
+        fetchUrl: tempUrl
+      }
+      this.$store.dispatch("GetDetail", params).then( res => {
+        this.temp = this.detailData
+        this.temp.createTime = moment.unix(this.detailData.createTime).format("YYYY-MM-DD hh:mm:ss")
+        this.temp.commentPics = this.detailData.commentPics.split(',')
+      })
     },
     checkDetailSubmit () {
       // 关闭查看详情
       this.checkDetailVisible = false
     },
-    handleModifyStatus(row, status) {
-      this.$message({
-        message: '操作成功',
-        type: 'success'
-      })
-      row.status = status
+    handleModifyStatus(row) {
+      let tempUrl = this.curTab === 1 ? `/sys/question/delete?questionId=${row.questionId}` : `sys/comment/delete?commentId=${row.commentId}`
+      MessageBox.confirm(
+          '确定要删除吗？',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        ).then(() => {
+          let params = {
+            data: {},
+            fetchUrl: tempUrl
+          }
+          this.$store.dispatch("DeleteMembers", params).then( res => {
+            this.$notify({
+              title: '成功',
+              message: '操作成功',
+              type: 'success',
+              duration: 2000
+            })
+            this.getList()
+          })
+        })
     },
     handleCreate() {
       this.dialogStatus = 'create'

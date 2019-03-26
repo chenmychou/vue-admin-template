@@ -9,9 +9,9 @@
       <div class="high-search" @click="globeSearch">
         高级检索
       </div>
-      <el-input v-model="listQuery.title" :placeholder="$t('table.title')" style="width: 300px;float:right">
-        <el-button slot="append" icon="el-icon-search" type="success" @keyup.enter.native="handleFilter" />
-      </el-input>
+      <!-- <el-input v-model="listQuery.title" :placeholder="$t('table.title')" style="width: 300px;float:right">
+        <el-button slot="append" icon="el-icon-search" type="success" @click="handleFilter" />
+      </el-input> -->
     </div>
     <el-table
       v-loading="listLoading"
@@ -20,13 +20,12 @@
       border
       fit
       highlight-current-row
-      style="width: 100%;"
-      @sort-change="sortChange">
-      <el-table-column :label="$t('table.id')" align="center" width="65">
+      style="width: 100%;">
+      <!-- <el-table-column :label="$t('table.id')" align="center" width="65">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
-      </el-table-column>
+      </el-table-column> -->
       <el-table-column :label="$t('table.uid')" align="center" width="105">
         <template slot-scope="scope">
           <span>{{ scope.row.uid }}</span>
@@ -69,9 +68,9 @@
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :pageSize.sync="listQuery.pageSize" @pagination="getList" />
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form ref="dataForm" :rules="dialogStatus !== 'highSearch' ? rules: null" :model="temp" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
-        <el-form-item :label="$t('table.uid')" prop="uid">
+        <!-- <el-form-item :label="$t('table.uid')" prop="uid">
           <el-input v-model="temp.uid"/>
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item :label="$t('table.kid')" prop="uid">
           <el-input v-model="temp.uid"/>
         </el-form-item>
@@ -236,8 +235,28 @@ let list = {
         ]
       }
 const tabsU = [ // 欧盟
-    { tabName: '禁用成分', kinds: 1, active: true },
-    { tabName: '限用成分', kinds: 2, active: false },
+    { tabName: '禁用成分', kinds: 1, active: true,
+      fields: [
+        {uid: "序号"},
+        {chinaName: "中文名"},
+        {sourceCas: "CAS号"},
+        {oumengUid: "欧盟编号"},
+        {chinaId: "中国编号"},
+        {remark: "备注"},
+        {chinaId: "中国序号"}
+      ]
+    },
+    { tabName: '限用成分', kinds: 2, active: false, 
+      fields: [
+        {uid: "序号"},
+        {chinaName: "中文名"},
+        {sourceCas: "CAS号"},
+        {oumengUid: "欧盟编号"},
+        {chinaId: "中国编号"},
+        {remark: "备注"},
+        {chinaId: "中国序号"}
+      ]
+    },
     { tabName: '着色剂', kinds: 3, active: false },
     { tabName: '防腐剂', kinds: 4, active: false },
     { tabName: '防晒剂', kinds: 5, active: false }
@@ -266,7 +285,16 @@ export default {
         pageSize: 20,
         sourceType: 1, // 资源类型   1-中国欧盟，2-中国韩国
         content: '', // 搜索内容
-        // sort: '+id'
+      },
+      searchObject: {
+        oumengUid: '', // 欧盟序号
+        hanUid: '', // 韩国序号
+        chinaName: '', //中文名
+        englishName: '', // 英文名
+        sourceCas: '', // cas
+        sourceCi: '', //ci
+        chinaId: '', // 中文序号
+        sourceCas: '' // cas
       },
       temp: {
       },
@@ -327,10 +355,6 @@ export default {
         }, 1.5 * 1000)
       }, 1000)
     },
-    handleFilter() {
-      this.listQuery.page = 1
-      this.getList()
-    },
     handleCheckDetail(row, status) {
       this.checkDetailVisible = true
       this.temp = Object.assign({}, row) // copy obj
@@ -344,20 +368,6 @@ export default {
         type: 'success'
       })
       row.status = status
-    },
-    sortChange(data) {
-      const { prop, order } = data
-      if (prop === 'uid') {
-        this.sortByID(order)
-      }
-    },
-    sortByID(order) {
-      if (order === 'ascending') {
-        this.listQuery.sort = '+uid'
-      } else {
-        this.listQuery.sort = '-uid'
-      }
-      this.handleFilter()
     },
     handleCreate() {
       this.dialogStatus = 'create'
@@ -410,8 +420,8 @@ export default {
   },
   watch: {
     '$route': {
-      handler: function(val, oldVal){
-        console.log(val, oldVal);
+      handler: function(newVal, oldVal){
+        this.tabs = newVal.path === '/european-table' ? tabsU : tabsK
       },
       // 深度观察监听
       // deep: true

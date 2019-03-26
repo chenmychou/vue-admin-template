@@ -1,3 +1,5 @@
+import { stat } from "fs";
+
 const getters = {
   sidebar: state => state.app.sidebar,
   device: state => state.app.device,
@@ -9,5 +11,7 @@ const getters = {
   items: state => state.table.items,
   listQuerys: state => state.table.listQuery,
   totals: state => state.table.total,
+  detailData: state => state.table.detailData,
+  companyData: state => state.table.companyData
 }
 export default getters

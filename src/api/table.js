@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 export function getList(params) {
-  // 问题反馈
+  // 列表
   return request({
     url: params.fetchUrl,
     method: 'post',

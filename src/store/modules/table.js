@@ -36,6 +36,9 @@ const table = {
     },
     ALLOW_ACCESS_STATUS: (state, data) => {
       state.allowAccessStatus = data
+    },
+    SET_COMPANY_DATA: (state, data) => {
+      state.companyData = data
     }
   },
 
@@ -55,7 +58,13 @@ const table = {
         })
       })
     },
-    GetDeail({ commit }, params) {
+    StoreCurCompanyData({ commit }, params) {
+      return new Promise(resolve => {
+        commit('SET_COMPANY_DATA', params)
+        resolve(params)
+      })
+    },
+    GetDetail({ commit }, params) {
         return new Promise(resolve => {
           getDetail(params).then( res => {
               commit('SET_DETAIL_DATA', res.data)

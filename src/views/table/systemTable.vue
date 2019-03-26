@@ -130,12 +130,12 @@ export default {
         create: '新增'
       },
       rules: {
-        uid: [{ required: true, message: 'uid is required', trigger: 'blur' }],
-        chinaName: [{ required: true, message: 'chinaName is required', trigger: 'blur' }],
-        englishName: [{ required: true, message: 'englishName is required', trigger: 'blur' }],
-        sourceCas: [{ required: true, message: 'sourceCas is required', trigger: 'blur' }],
-        sourceCi: [{ required: true, message: 'sourceCi is required', trigger: 'blur' }],
-        chinaId: [{ required: true, message: 'chinaId is required', trigger: 'blur' }]
+        uid: [{ required: true, message: '必填项', trigger: 'blur' }],
+        chinaName: [{ required: true, message: '必填项', trigger: 'blur' }],
+        englishName: [{ required: true, message: '必填项', trigger: 'blur' }],
+        sourceCas: [{ required: true, message: '必填项', trigger: 'blur' }],
+        sourceCi: [{ required: true, message: '必填项', trigger: 'blur' }],
+        chinaId: [{ required: true, message: '必填项', trigger: 'blur' }]
       },
       downloadLoading: false,
       dialogPictureVisible: false,
@@ -200,7 +200,6 @@ export default {
             this.getList()
           })
         })
-      
     },
     handleCreate() {
       this.dialogStatus = 'create'
