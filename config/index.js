@@ -10,13 +10,21 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
-      '/api': {
-        target: 'http://39.105.179.69:8095',  //目标接口域名
+      '/sys': {
+        target: 'http://124.193.187.101:8095/',
+        // target: 'http://39.105.179.69:8095/',  //目标接口域名
         changeOrigin: true,  //是否跨域
-        pathRewrite: {
-          '^/api': ''   //重写接口
-        }
+        // pathRewrite: {
+        //   '^/sys': ''   //重写接口
+        // }
       }
+      // '/file':{
+      //   target: 'http://124.193.187.101:8095/',  //目标接口域名
+      //   changeOrigin: true,  //是否跨域
+      //   pathRewrite: {
+      //     '^/file': ''   //重写接口
+      //   }
+      // }
     },
 
     // Various Dev Server settings

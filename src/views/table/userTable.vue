@@ -204,15 +204,16 @@
           <el-input v-model="tempCompanyData.cardNo"/>
         </el-form-item>
         <el-form-item :label="$t('table.cardPic')" prop="cardPic">
-          <!-- <el-button v-if="!tempCompanyData.cardPic" type="primary" icon="el-icon-upload">上传营业执照副本照片</el-button> -->
           <el-upload
+            enctype="multipart/form-data"
             class="avatar-uploader"
-            action="https://jsonplaceholder.typicode.com/posts/"
+            :headers="{token}"
+            :action="uploadUrl()"
             :show-file-list="false"
-            :on-success="handlePicSuccess"
-            :before-upload="beforePicUpload">
-            <img :src="dialogImageUrl" class="avatar">
-            <!-- <i v-else class="el-icon-plus avatar-uploader-icon"></i> -->
+            :on-success="handleCompanySuccess"
+            :before-upload="beforeCompanyUpload">
+            <img v-if="tempCompanyData.cardPic" :src="tempCompanyData.cardPic" class="avatar">
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
         </el-form-item>
         <el-form-item :label="$t('table.headName')" prop="headName">
@@ -251,7 +252,17 @@
         <el-form-item :label="$t('table.headImg')" prop="headImg">
           <!-- TODO -->
           <!-- 头像上传 -->
-          <span><img width="100" height="100" :src="tempUserData.headImg" alt=""></span>
+          <el-upload
+            enctype="multipart/form-data"
+            class="avatar-uploader"
+            :headers="{token}"
+            :action="uploadUrl()"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload">
+            <img v-if="tempUserData.headImg" :src="tempUserData.headImg" class="avatar">
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+          </el-upload>
         </el-form-item>
         <el-form-item :label="$t('table.userTitle')" prop="userTitle">
           <el-input v-model="tempUserData.userTitle"/>
@@ -275,6 +286,17 @@
       <el-form ref="dataForm" :rules="rules" :model="tempMasterData" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
         <el-form-item :label="$t('table.headImg')" prop="headImg">
           <!-- TODO -->
+           <el-upload
+            enctype="multipart/form-data"
+            class="avatar-uploader"
+            :headers="{token}"
+            :action="uploadUrl()"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload">
+            <img v-if="tempMasterData.headImg" :src="tempMasterData.headImg" class="avatar">
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+          </el-upload>
           <!-- 头像上传 -->
           <span><img width="100" height="100" :src="tempMasterData.headImg" alt=""></span>
         </el-form-item>
@@ -319,7 +341,7 @@
     </el-dialog>
     <el-dialog :title="userTypeMap[curTab]+textMap['checkDetail']" :visible.sync="checkDetailVisible">
       <el-form v-if="curTab === 2" :model="tempDetailData" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
-        <el-form-item :label="$t('table.headImg')"  align="center">
+        <el-form-item :label="$t('table.headImg')">
           <span>
             <img width="40" height="40" :src="tempDetailData.headImg" />
           </span>
@@ -363,13 +385,18 @@
           <span>{{ tempDetailData.cardNo }}</span>
         </el-form-item>
         <el-form-item label="营业执照">
-          <span><img :src="tempDetailData.cardPic" alt=""></span>
+          <span><img width="200" height="300" :src="tempDetailData.cardPic" alt=""></span>
         </el-form-item>
         <el-form-item :label="$t('table.createTime')">
           <span>{{ tempDetailData.createTime ? moment.unix(tempDetailData.createTime).format("YYYY-MM-DD hh:mm:ss") : "暂无"}}</span>
         </el-form-item>
       </el-form>
       <el-form v-if="curTab === 3" :model="tempDetailData" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
+        <el-form-item :label="$t('table.headImg')">
+          <span>
+            <img width="40" height="40" :src="tempDetailData.headImg" />
+          </span>
+        </el-form-item>
         <el-form-item :label="$t('table.userId')">
           <span>{{ tempDetailData.userId }}</span>
         </el-form-item>
@@ -393,7 +420,7 @@
             未认证
           </span>
         </el-form-item>
-        <el-form-item :label="$t('table.isDelete')" align="center">
+        <el-form-item :label="$t('table.isDelete')">
           <span v-if="tempDetailData.status === 1">
             启用
           </span>
@@ -431,6 +458,7 @@ export default {
       curTab: 1,
       tempDetailData: {},
       search: '',
+      imageUrl: '',
       tableKey: 0,
       moment: moment,
       list: [],
@@ -451,7 +479,7 @@ export default {
         // 添加公司信息
         "companyName": "",
         "cardNo": "",
-        "cardPic": "http://source.zouzhengming.com/MSg6YdvsFb8FDCZRStziw.jpg",
+        "cardPic": "",
         "headName": "",
         "phone": ""
       },
@@ -461,7 +489,7 @@ export default {
         "userName": "",
         "userPhone": "",
         "userPassword": "",
-        "headImg": "http://source.zouzhengming.com/MSg6YdvsFb8FDCZRStziw.jpg",
+        "headImg": "",
         "userTitle": "",
         "statusType": true,
         "status": 1  // 1-启用，2-禁用
@@ -469,7 +497,7 @@ export default {
       tempMasterData: {
         "userName": "",
         "userPhone": "",
-        "headImg": "http://source.zouzhengming.com/MSg6YdvsFb8FDCZRStziw.jpg",
+        "headImg": "",
         "userTitle": "",
         "goodField": "",
         expertIsCertStatus: true,
@@ -507,7 +535,7 @@ export default {
       },
       downloadLoading: false,
       dialogPictureVisible: false,
-      dialogImageUrl: 'http://source.zouzhengming.com/MSg6YdvsFb8FDCZRStziw.jpg',
+      // dialogImageUrl: 'http://source.zouzhengming.com/MSg6YdvsFb8FDCZRStziw.jpg',
       userTypeMap: {
         1: "企业",
         2: "用户",
@@ -517,6 +545,7 @@ export default {
   },
    computed: {
     ...mapGetters([
+      "token",
       'items',
       'listQuerys',
       'totals',
@@ -528,6 +557,48 @@ export default {
     this.getList()
   },
   methods: {
+    
+
+    handleCompanySuccess(res, file) {
+      this.tempCompanyData.cardPic = res.data
+    },
+    beforeCompanyUpload(file) {
+      const isJPG = file.type === 'image/jpeg';
+      const isLt2M = file.size / 1024 / 1024 < 2;
+
+      if (!isJPG) {
+        this.$message.error('上传头像图片只能是 JPG 格式!');
+      }
+      if (!isLt2M) {
+        this.$message.error('上传头像图片大小不能超过 2MB!');
+      }
+      return isJPG && isLt2M;
+    },
+    handleAvatarSuccess(res, file) {
+      if (this.curTab === 2) {
+        this.tempUserData.headImg = res.data
+      }
+      if (this.curTab === 3) {
+        this.tempMasterData.headImg = res.data
+      }
+    },
+    beforeAvatarUpload(file) {
+      const isJPG = file.type === 'image/jpeg';
+      const isLt2M = file.size / 1024 / 1024 < 2;
+
+      if (!isJPG) {
+        this.$message.error('上传头像图片只能是 JPG 格式!');
+      }
+      if (!isLt2M) {
+        this.$message.error('上传头像图片大小不能超过 2MB!');
+      }
+      return isJPG && isLt2M;
+    },
+
+    uploadUrl(){
+      var url = '/sys/upload/file'// 生产环境和开发环境的判断
+      return url
+    },
     changeTab(item) {
       let tempTabs = this.tabs
       this.curTab = item.type
@@ -619,6 +690,7 @@ export default {
       })
     },
     createData() {
+      this.tempCompanyData.cardPic = this.imageUrl
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           let params = {
@@ -649,6 +721,10 @@ export default {
               duration: 2000
             })
             this.getList()
+            this.tempCompanyData = {}
+            this.tempMasterData = {}
+            this.tempUserData = {}
+            this.imageUrl = ''
           })
         }
       })
@@ -657,6 +733,7 @@ export default {
       let curTab = this.curTab
       if(curTab === 1) {
         this.tempCompanyData = Object.assign({}, row)
+        console.log('row=======', this.tempCompanyData)
       }
       if(curTab === 2) {
         this.tempUserData = Object.assign({}, row)
@@ -740,14 +817,14 @@ export default {
     },
     handlePicSuccess(file, fileList) {
       // 图片上传删除
-      this.dialogImageUrl = 'http://source.zouzhengming.com/MSg6YdvsFb8FDCZRStziw.jpg'
+      // this.dialogImageUrl = 'http://source.zouzhengming.com/MSg6YdvsFb8FDCZRStziw.jpg'
       console.log(file, fileList);
     },
     beforePicUpload() {
       // 图片上传 预览
       console.log('file', file)
       // this.dialogImageUrl = file.url;
-      this.dialogImageUrl = 'http://source.zouzhengming.com/MSg6YdvsFb8FDCZRStziw.jpg'
+      // this.dialogImageUrl = 'http://source.zouzhengming.com/MSg6YdvsFb8FDCZRStziw.jpg'
       // this.dialogPictureVisible = true;
     }
   },

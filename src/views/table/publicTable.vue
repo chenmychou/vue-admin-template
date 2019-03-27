@@ -141,19 +141,24 @@
     <el-dialog :title="textMap['allImport']" :visible.sync="allImportVisible">
       <div style="with:100%">
         <div style="margin-bottom: 20px">已有模板，直接导入</div>
-        <el-upload
-          class="upload-demo"
-          ref="upload"
-          action=""
-          :http-request="selectExcelUpload"
-          :on-preview="handlePreview"
-          :on-remove="handleRemove"
-          :file-list="fileList"
-          :auto-upload="false">
-          <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
-          <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传</el-button>
-          <div slot="tip" class="el-upload__tip">只能上传EXCEL文件，且不超过10M</div>
-        </el-upload>
+          <el-upload
+            class="upload-demo"
+            :action="uploadUrl()"
+            ref="upload"
+            :on-progress="uploadProgress"
+            :headers="{token}"
+            :data="{kinds: curTab}"
+            :on-preview="handlePreview"
+            :on-remove="handleRemove"
+            :on-success="uploadSuccess"
+            :file-list="fileList"
+            enctype="multipart/form-data"
+            :before-upload="beforeExcelUpload"
+            :auto-upload="false">
+            <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+            <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">上传</el-button>
+            <div slot="tip" class="el-upload__tip">只能上传EXCEL文件，且不超过10M</div>
+          </el-upload>
         <!-- <upload-excel-component :on-success="handleExcelSuccess" :before-upload="beforeExcelUpload" /> -->
       </div>
       <div style="margin-top: 20px">
@@ -229,71 +234,6 @@
 import { mapGetters } from 'vuex'
 import { Message, MessageBox } from 'element-ui'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
-let list = {
-        total: 20,
-        items: [
-          {
-            "sourceId": 1,
-            "id": 1,
-            "uid": 1001,
-            "sourceType": 1,
-            "kinds": 1,
-            "chinaName": "N-5-氯苯哑唑-2-基乙酰胺",
-            "englishName": "N-(5-Chlorobenzoxazol-2-yl) acetamide",
-            "sourceCas": "35783-57-4",
-            "sourceCi": "aafasfafafci",
-            "chinaId": "943"
-          },
-          {
-            "sourceId": 1,
-            "uid": 1001,
-            "id": 2,
-            "sourceType": 1,
-            "kinds": 1,
-            "chinaName": "N-5-氯苯哑唑-2-基乙酰胺",
-            "englishName": "N-(5-Chlorobenzoxazol-2-yl) acetamide",
-            "sourceCas": "35783-57-4",
-            "sourceCi": "aafasfafafci",
-            "chinaId": "943"
-          },
-          {
-            "sourceId": 1,
-            "id": 3,
-            "uid": 1001,
-            "sourceType": 1,
-            "kinds": 1,
-            "chinaName": "N-5-氯苯哑唑-2-基乙酰胺",
-            "englishName": "N-(5-Chlorobenzoxazol-2-yl) acetamide",
-            "sourceCas": "35783-57-4",
-            "sourceCi": "aafasfafafci",
-            "chinaId": "943"
-          },
-          {
-            "sourceId": 1,
-            id: 4,
-            "uid": 1001,
-            "sourceType": 1,
-            "kinds": 1,
-            "chinaName": "N-5-氯苯哑唑-2-基乙酰胺",
-            "englishName": "N-(5-Chlorobenzoxazol-2-yl) acetamide",
-            "sourceCas": "35783-57-4",
-            "sourceCi": "aafasfafafci",
-            "chinaId": "943"
-          },
-          {
-            "sourceId": 1,
-            "uid": 1001,
-            id: 5,
-            "sourceType": 1,
-            "kinds": 1,
-            "chinaName": "N-5-氯苯哑唑-2-基乙酰胺",
-            "englishName": "N-(5-Chlorobenzoxazol-2-yl) acetamide",
-            "sourceCas": "35783-57-4",
-            "sourceCi": "aafasfafafci",
-            "chinaId": "943"
-          }
-        ]
-      }
 const tabsU = [ // 欧盟
     { tabName: '禁用成分', kinds: 1, active: true},
     { tabName: '限用成分', kinds: 2, active: false},
@@ -351,13 +291,11 @@ export default {
       list: [],
       curDetailData: {},
       curExcelUrl: '',
-      // tempDetailData: {},
       fieldData: allFieldData,
       listLoading: true,
       listQuery: {
         page: 1,
         pageSize: 10,
-        sourceType: 1, // 资源类型   1-中国欧盟，2-中国韩国
         content: '', // 搜索内容
       },
       tempDetailData: { // 编辑+创建
@@ -417,11 +355,11 @@ export default {
     }
   },
   created() {
-    console.log('host==', window.location.host)
     this.getList()
   },
    computed: {
     ...mapGetters([
+      "token",
       'items',
       'listQuerys',
       'totals',
@@ -440,6 +378,42 @@ export default {
       item.active = true
       this.getList()
     },
+    uploadUrl(){
+      var url = process.env.BASE_API + `/sys/source/file?kinds=${this.curTab}` // 生产环境和开发环境的判断
+      return url
+    },
+    uploadProgress(e, file, filelist){
+      console.log('e, file, filelist', e, file, filelist)
+    },
+    uploadSuccess(){
+      this.$notify({
+        title: '成功',
+        message: '操作成功',
+        type: 'success',
+        duration: 2000
+      })
+      this.fileList = []
+      this.allImportVisible = false
+    },
+    submitUpload(file) {
+      this.$refs.upload.submit();
+    },
+    handleRemove(file, fileList) {
+      console.log(file, fileList);
+    },
+    handlePreview(file) {
+      console.log(file);
+    },
+    beforeExcelUpload(file) {
+      // let type = file.name.split('.')
+      // if (type[1] === 'xlsx') {
+      //   return file
+      // } else {
+      //   this.$message.error('上传文件只能是 xlsx 格式!')
+      //   return false
+      // }
+      // return true
+    },
     downLoadTemplate() {
       let params = {
         data: {},
@@ -449,33 +423,6 @@ export default {
         this.curExcelUrl = this.loadExcelUrl
       })
     },
-    
-    submitUpload() {
-      this.$refs.upload.submit();
-    },
-    handleRemove(file, fileList) {
-      console.log(file, fileList);
-    },
-    handlePreview(file) {
-      console.log(file);
-    },
-    selectExcelUpload(data) {
-        let params = {
-          data: data,
-          fetchUrl: `/sys/source/file?kinds=${this.curTab}`
-        }
-        this.$store.dispatch("ImportExcel", params).then(res => {
-          this.$notify({
-            title: '成功',
-            message: `操作成功`,
-            type: 'success',
-            duration: 2000
-          })
-        })
-    },
-    // handleExcelSuccess({ results, header }) {
-    //   console.log('==========', results, header)
-    // },
     globeSearch() {
       this.listQuery = Object.assign({...this.listQuery}, {...this.searchObject} )
       this.getList()
@@ -484,6 +431,8 @@ export default {
      getList() {
       this.listLoading = true
       let kinds = this.curTab
+      this.tempDetailData.sourceType = this.curTab < 6 ? 1 : 2
+      this.listQuery.kinds = kinds
       this.listQuery = Object.assign({...this.listQuery}, {...this.tempListData} )
       let params = {
         listQuery: {...this.listQuery},
@@ -608,6 +557,7 @@ export default {
       handler: function(newVal, oldVal){
         this.tabs = newVal.path === '/european-table' ? tabsU : tabsK
         this.curTab = newVal.path === '/european-table' ? 1 : 6
+        this.getList()
         // this.fieldData = newVal.path === '/european-table' ? fieldKinds1 : fieldKinds6
       },
       // 深度观察监听
