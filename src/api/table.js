@@ -41,7 +41,20 @@ export function getDetail(params) {
   })
 }
 export function allowAccess(params) {
-  // 审核
+  return request({
+    url: params.fetchUrl,
+    method: 'post',
+    data: params.data
+  })
+}
+export function downLoadExcelFile(params) {
+  return request({
+    url: params.fetchUrl,
+    method: 'post',
+    data: params.data
+  })
+}
+export function importExcelFile(params) {
   return request({
     url: params.fetchUrl,
     method: 'post',

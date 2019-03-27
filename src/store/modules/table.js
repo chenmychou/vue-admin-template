@@ -1,4 +1,4 @@
-import { getList, addMembers, deleteMembers, getDetail, editMembers, allowAccess } from '@/api/table'
+import { getList, addMembers, deleteMembers, getDetail, editMembers, allowAccess, importExcelFile, downLoadExcelFile } from '@/api/table'
 
 const table = {
   state: {
@@ -39,7 +39,13 @@ const table = {
     },
     SET_COMPANY_DATA: (state, data) => {
       state.companyData = data
-    }
+    },
+    IMPORT_EXCEL_FILE: (state, data) => {
+      state.excelFile = data
+    },
+    DOWNLOAD_EXCEL_FILE: (state, data) => {
+      state.loadExcelUrl = data
+    },
   },
 
   actions: {
@@ -103,8 +109,23 @@ const table = {
               resolve(res)
           })
       })
+    },
+    ImportExcel({ commit }, params) {
+      return new Promise(resolve => {
+        importExcelFile(params).then( res => {
+              commit('IMPORT_EXCEL_FILE', res.data)
+              resolve(res)
+          })
+      })
+    },
+    DownloadExcelFile({ commit }, params) {
+      return new Promise(resolve => {
+        downLoadExcelFile(params).then( res => {
+              commit('DOWNLOAD_EXCEL_FILE', res.data)
+              resolve(res)
+          })
+      })
     }
-
   }
 }
 

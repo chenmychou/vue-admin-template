@@ -12,6 +12,8 @@ const getters = {
   listQuerys: state => state.table.listQuery,
   totals: state => state.table.total,
   detailData: state => state.table.detailData,
-  companyData: state => state.table.companyData
+  companyData: state => state.table.companyData,
+  excelFile: state => state.table.excelFile,
+  loadExcelUrl: state => state.table.loadExcelUrl
 }
 export default getters
