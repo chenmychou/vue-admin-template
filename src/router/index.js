@@ -31,20 +31,21 @@ export const constantRouterMap = [
     name: 'login',
     hidden: true
   },
-  {
-    path: '/dashboard',
-    component: Layout,
-    redirect: 'noredirect',
-    children: [
-      {
-        path: '',
-        component: () => import('@/views/dashboard/index'),
-        name: 'dashboard',
-        meta: { title: '首页', icon: 'dashboard' },
+  // {
+  //   path: '/dashboard',
+  //   component: Layout,
+  //   redirect: 'noredirect',
+  //   children: [
+  //     {
+  //       path: '',
+  //       redirect: '/european-table',
+  //       // component: () => import('@/views/dashboard/index'),
+  //       // name: 'dashboard',
+  //       // meta: { title: '首页', icon: 'dashboard' },
         
-      }
-    ]
-  },
+  //     }
+  //   ]
+  // },
   {
     path: '/european-table',
     component: Layout,
@@ -120,6 +121,19 @@ export const constantRouterMap = [
         component: () => import('@/views/table/systemTable'),
         name: 'systemTable',
         meta: { title: '系统管理', icon: 'system' }
+      }
+    ]
+  },
+  {
+    path: '/aboutUs',
+    component: Layout,
+    redirect: 'noredirect',
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/aboutUs'),
+        name: 'aboutUs',
+        meta: { title: '关于我们', icon: 'aboutus' }
       }
     ]
   },

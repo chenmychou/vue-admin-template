@@ -6,6 +6,7 @@
     <div class="filter-container">
       <el-button class="filter-item" style="margin-left: 10px;" type="danger" icon="el-icon-edit" @click="handleCreate">{{ $t('table.addsingle') }}</el-button>
       <el-button class="filter-item" style="margin-left: 10px;" type="danger" icon="el-icon-star-off" @click="handleImportCreate">{{ $t('table.addmore') }}</el-button>
+      <el-button class="filter-item" style="margin-left: 10px;" type="danger" icon="el-icon-star-off" @click="handlerMoreDelete">批量删除</el-button>
       <div class="high-search" @click="dialogFormSearchVisible=true">
         高级检索
       </div>
@@ -164,7 +165,7 @@
       <div style="margin-top: 20px">
         没有模板,下载模板
         <el-button style="margin-left: 20px" type="primary" @click="downLoadTemplate">点击获取当前数据模板下载地址</el-button>
-        <div>
+        <div style="line-height: 40px;">
           <a :href="curExcelUrl" target="_blank" rel="noopener noreferrer">{{curExcelUrl}}</a>
         </div>
       </div>
@@ -234,21 +235,21 @@
 import { mapGetters } from 'vuex'
 import { Message, MessageBox } from 'element-ui'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
-const tabsU = [ // 欧盟
-    { tabName: '禁用成分', kinds: 1, active: true},
-    { tabName: '限用成分', kinds: 2, active: false},
-    { tabName: '着色剂', kinds: 3, active: false},
-    { tabName: '防腐剂', kinds: 4, active: false },
-    { tabName: '防晒剂', kinds: 5, active: false }
-  ]
-const tabsK = [ // 韩国
-    { tabName: '禁用成分', kinds: 6, active: true },
-    { tabName: '限用成分', kinds: 7, active: false },
-    { tabName: '防晒剂', kinds: 8, active: false },
-    { tabName: '染发剂', kinds: 9, active: false },
-    { tabName: '其他准用成分', kinds: 10, active: false },
-    { tabName: '准用色素', kinds: 11, active: false }
-  ]
+// const tabsU = [ // 欧盟
+//     { tabName: '禁用成分', kinds: 1, active: true},
+//     { tabName: '限用成分', kinds: 2, active: false},
+//     { tabName: '着色剂', kinds: 3, active: false},
+//     { tabName: '防腐剂', kinds: 4, active: false },
+//     { tabName: '防晒剂', kinds: 5, active: false }
+//   ]
+// const tabsK = [ // 韩国
+//     { tabName: '禁用成分', kinds: 6, active: true },
+//     { tabName: '限用成分', kinds: 7, active: false },
+//     { tabName: '防晒剂', kinds: 8, active: false },
+//     { tabName: '染发剂', kinds: 9, active: false },
+//     { tabName: '其他准用成分', kinds: 10, active: false },
+//     { tabName: '准用色素', kinds: 11, active: false }
+//   ]
 
 const allFieldData = {
   list: {
@@ -284,7 +285,20 @@ export default {
   components: { Pagination },
   data() {
     return {
-      tabs: this.$route.path === '/european-table' ? tabsU : tabsK,
+      tabs: this.$route.path === '/european-table' ? [ // 欧盟
+    { tabName: '禁用成分', kinds: 1, active: true},
+    { tabName: '限用成分', kinds: 2, active: false},
+    { tabName: '着色剂', kinds: 3, active: false},
+    { tabName: '防腐剂', kinds: 4, active: false },
+    { tabName: '防晒剂', kinds: 5, active: false }
+  ] : [ // 韩国
+    { tabName: '禁用成分', kinds: 6, active: true },
+    { tabName: '限用成分', kinds: 7, active: false },
+    { tabName: '防晒剂', kinds: 8, active: false },
+    { tabName: '染发剂', kinds: 9, active: false },
+    { tabName: '其他准用成分', kinds: 10, active: false },
+    { tabName: '准用色素', kinds: 11, active: false }
+  ],
       search: '',
       tableKey: 0,
       curTab: this.$route.path === '/european-table' ? 1 : 6,
@@ -415,12 +429,13 @@ export default {
       // return true
     },
     downLoadTemplate() {
+      this.curExcelUrl = ''
       let params = {
         data: {},
         fetchUrl: `/sys/source/getModel?kinds=${this.curTab}`
       }
       this.$store.dispatch("DownloadExcelFile", params).then(res => {
-        this.curExcelUrl = this.loadExcelUrl
+        this.curExcelUrl = res.data
       })
     },
     globeSearch() {
@@ -441,6 +456,32 @@ export default {
       this.$store.dispatch("GetList", params).then( res => {
         this.list = this.items
         this.listLoading = false
+      })
+    },
+    handlerMoreDelete() {
+      // TODOs
+      MessageBox.confirm(
+        '确定要删除该种类的所有数据吗？',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      ).then(() => {
+        let params = {
+          data: {},
+          type:"post",
+          fetchUrl: '/sys/source/deleteKinds?kinds=' + this.curTab
+        }
+        this.$store.dispatch("DeleteMembers", params).then( res => {
+          this.$notify({
+            title: '成功',
+            message: '操作成功',
+            type: 'success',
+            duration: 2000
+          })
+          this.getList()
+        })
       })
     },
     handleCheckDetail(sourceId) {
@@ -555,7 +596,20 @@ export default {
   watch: {
     '$route': {
       handler: function(newVal, oldVal){
-        this.tabs = newVal.path === '/european-table' ? tabsU : tabsK
+        this.tabs = newVal.path === '/european-table' ? [ // 欧盟
+    { tabName: '禁用成分', kinds: 1, active: true},
+    { tabName: '限用成分', kinds: 2, active: false},
+    { tabName: '着色剂', kinds: 3, active: false},
+    { tabName: '防腐剂', kinds: 4, active: false },
+    { tabName: '防晒剂', kinds: 5, active: false }
+  ] : [ // 韩国
+    { tabName: '禁用成分', kinds: 6, active: true },
+    { tabName: '限用成分', kinds: 7, active: false },
+    { tabName: '防晒剂', kinds: 8, active: false },
+    { tabName: '染发剂', kinds: 9, active: false },
+    { tabName: '其他准用成分', kinds: 10, active: false },
+    { tabName: '准用色素', kinds: 11, active: false }
+  ],
         this.curTab = newVal.path === '/european-table' ? 1 : 6
         this.getList()
         // this.fieldData = newVal.path === '/european-table' ? fieldKinds1 : fieldKinds6

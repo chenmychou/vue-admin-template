@@ -3,12 +3,16 @@ import Vue from 'vue'
 import 'normalize.css/normalize.css' // A modern alternative to CSS resets
 
 import ElementUI from 'element-ui'
+import  VueQuillEditor from 'vue-quill-editor'
 import Cookies from 'js-cookie'
 import 'element-ui/lib/theme-chalk/index.css'
 import locale from 'element-ui/lib/locale/lang/zh-CN' // lang i18n
 import i18n from './lang' // Internationalization
 import './icons' // icon
 import '@/styles/index.scss' // global css
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
 
 import App from './App'
 import store from './store'
@@ -26,7 +30,7 @@ import '@/icons' // icon
  * If you remove `../mock` it will automatically request easy-mock data.
  */
 // import '../mock' // simulation data
-
+Vue.use(VueQuillEditor)
 Vue.use(ElementUI, {
   size: Cookies.set('size') || 'medium', // set element-ui default size
   locale,

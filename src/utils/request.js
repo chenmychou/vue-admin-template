@@ -49,13 +49,12 @@ service.interceptors.response.use(
             type: 'warning'
           }
         ).then(() => {
-          store.dispatch('FedLoginOut').then(() => {
+          store.dispatch('FedLogOut').then(() => {
             location.href="#/login"
             location.reload() // 为了重新实例化vue-router对象 避免bug
           })
         })
       }
-      console.log('res======', res.code)
       if (Number(res.code) >= 500) {
         MessageBox.confirm(
           '服务器出错',
@@ -65,7 +64,7 @@ service.interceptors.response.use(
             type: 'warning'
           }
         ).then(() => {
-          store.dispatch('FedLoginOut').then(() => {
+          store.dispatch('FedLogOut').then(() => {
             location.href="#/login"
             location.reload() // 为了重新实例化vue-router对象 避免bug
           })

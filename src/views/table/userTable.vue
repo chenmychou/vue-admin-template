@@ -298,7 +298,7 @@
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </el-upload>
           <!-- 头像上传 -->
-          <span><img width="100" height="100" :src="tempMasterData.headImg" alt=""></span>
+          <!-- <span><img width="100" height="100" :src="tempMasterData.headImg" alt=""></span> -->
         </el-form-item>
         <el-form-item :label="$t('table.userName')" prop="userName">
           <el-input v-model="tempMasterData.userName"/>
@@ -352,6 +352,9 @@
         <el-form-item :label="$t('table.userName')" align="center">
             <span>{{ tempDetailData.userName }}</span>
         </el-form-item>
+        <el-form-item label="登录账户名" align="center">
+            <span>{{ tempDetailData.account }}</span>
+        </el-form-item>
         <el-form-item :label="$t('table.userTitle')" align="center">
             <span>{{ tempDetailData.userTitle }}</span>
         </el-form-item>
@@ -403,6 +406,9 @@
         <el-form-item :label="$t('table.userName')">
           <span>{{ tempDetailData.userName }}</span>
         </el-form-item>
+        <el-form-item label="登录账户名">
+            <span>{{ tempDetailData.account }}</span>
+        </el-form-item>
         <el-form-item :label="$t('table.userTitle')">
           <span>{{ tempDetailData.userTitle }}</span>
         </el-form-item>
@@ -441,21 +447,22 @@
 // import { parseTime } from '@/utils'
 import { mapGetters } from 'vuex'
 import moment from 'moment'
+import md5 from 'md5'
 import { Message, MessageBox } from 'element-ui'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
-const userTabs = [
-    { tabName: '企业列表', type: 1, active: true },
-    { tabName: '用户列表', type: 2, active: false },
-    { tabName: '专家列表', type: 3, active: false }
-  ]
 
 export default {
   name: 'publicTable',
   components: { Pagination },
   data() {
     return {
-      tabs: userTabs,
+      tabs: [
+      { tabName: '企业列表', type: 1, active: true },
+      { tabName: '用户列表', type: 2, active: false },
+      { tabName: '专家列表', type: 3, active: false }
+    ],
       curTab: 1,
+      type: 1,
       tempDetailData: {},
       search: '',
       imageUrl: '',
@@ -524,7 +531,7 @@ export default {
         userName: [{ required: true, message: '必填项', trigger: 'blur' }],
         userPhone: [{ required: true, message: '必填项', trigger: 'blur' }],
         userPassword: [{ required: true, message: '必填项', trigger: 'blur' }],
-        headImg: [{ required: true, message: '必填项', trigger: 'blur' }],
+        // headImg: [{ required: true, message: '必填项', trigger: 'blur' }],
         userTitle: [{ required: true, message: '必填项', trigger: 'blur' }],
         status: [{ required: true, message: '必填项', trigger: 'blur' }],
         companyName: [{ required: true, message: '必填项', trigger: 'blur' }],
@@ -556,23 +563,26 @@ export default {
   created() {
     this.getList()
   },
+  beforeDestroy() {
+    Object.assign(this.$data, this.$options.data())
+  },
   methods: {
-    
-
     handleCompanySuccess(res, file) {
+      this.imageUrl = res.data
       this.tempCompanyData.cardPic = res.data
     },
     beforeCompanyUpload(file) {
-      const isJPG = file.type === 'image/jpeg';
+      // const isJPG = file.type === 'image/jpeg';
       const isLt2M = file.size / 1024 / 1024 < 2;
 
-      if (!isJPG) {
-        this.$message.error('上传头像图片只能是 JPG 格式!');
-      }
+      // if (!isJPG) {
+      //   this.$message.error('上传头像图片只能是 JPG 格式!');
+      // }
       if (!isLt2M) {
         this.$message.error('上传头像图片大小不能超过 2MB!');
       }
-      return isJPG && isLt2M;
+      // return isJPG && isLt2M;
+      return isLt2M;
     },
     handleAvatarSuccess(res, file) {
       if (this.curTab === 2) {
@@ -586,13 +596,15 @@ export default {
       const isJPG = file.type === 'image/jpeg';
       const isLt2M = file.size / 1024 / 1024 < 2;
 
-      if (!isJPG) {
-        this.$message.error('上传头像图片只能是 JPG 格式!');
-      }
+      // if (!isJPG) {
+      //   this.$message.error('上传头像图片只能是 JPG 格式!');
+      // }
       if (!isLt2M) {
         this.$message.error('上传头像图片大小不能超过 2MB!');
       }
-      return isJPG && isLt2M;
+      // return isJPG && isLt2M;
+      return isLt2M;
+      
     },
 
     uploadUrl(){
@@ -702,12 +714,14 @@ export default {
             params.fetchUrl = '/sys/company/add'
           }
           if (this.curTab === 2) {
+            this.tempUserData.userPassword = md5(this.tempUserData.userPassword)
             this.tempUserData.status = this.tempUserData.statusType ? 1 : 2
             params.data = this.tempUserData
             params.fetchUrl = '/sys/companyUser/add'
           }
           if (this.curTab === 3) {
             this.tempMasterData.status = this.tempMasterData.statusType ? 1 : 2
+            this.tempMasterData.userPassword = md5(this.tempMasterData.userPassword)
             this.tempMasterData.expertIsCert = this.tempMasterData.expertIsCertStatus ? 1 : 0
             params.data = this.tempMasterData
             params.fetchUrl = '/sys/expert/add'
@@ -733,7 +747,6 @@ export default {
       let curTab = this.curTab
       if(curTab === 1) {
         this.tempCompanyData = Object.assign({}, row)
-        console.log('row=======', this.tempCompanyData)
       }
       if(curTab === 2) {
         this.tempUserData = Object.assign({}, row)
@@ -760,11 +773,13 @@ export default {
           }
           if (this.curTab === 2) {
             this.tempUserData.status = this.tempUserData.statusType ? 1 : 2
+            this.tempUserData.userPassword = md5(this.tempUserData.userPassword)
             params.data = this.tempUserData
             params.fetchUrl = '/sys/companyUser/edit'
           }
           if (this.curTab === 3) {
             this.tempMasterData.status = this.tempMasterData.statusType ? 1 : 2
+            this.tempMasterData.userPassword = md5(this.tempMasterData.userPassword)
             this.tempMasterData.expertIsCert = this.tempMasterData.expertIsCertStatus ? 1 : 0
             params.data = this.tempMasterData
             params.fetchUrl = '/sys/expert/edit'
@@ -828,6 +843,7 @@ export default {
       // this.dialogPictureVisible = true;
     }
   },
+  
   watch: {
     '$route': {
       handler: function(val, oldVal){

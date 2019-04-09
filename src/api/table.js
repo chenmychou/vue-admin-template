@@ -28,7 +28,7 @@ export function deleteMembers(params) {
   // 删除
   return request({
     url: params.fetchUrl,
-    method: 'get',
+    method: params.type ? params.type : "get",
     data: params.data
   })
 }
@@ -59,5 +59,14 @@ export function importExcelFile(params) {
     url: params.fetchUrl,
     method: 'post',
     data: params.data
+  })
+}
+export function storeAboutUs(params){
+  return request({
+    url: '/sys/config/saveIntroduce',
+    method: "post",
+    data: {
+      content: params.content
+    }
   })
 }

@@ -47,16 +47,18 @@ export default {
       }
     }
     const validatePass = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error('密码不能小于6位'))
+      if (!value) {
+        callback(new Error('请输入密码'))
       } else {
         callback()
       }
     }
     return {
       loginForm: {
-        username: '10322l25gW',
-        password: '123456'
+        // username: '10322l25gW',
+        username: '',
+        password: '',
+        // password: '123456'
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -95,7 +97,7 @@ export default {
           }
           this.$store.dispatch('LoginAdmin', params).then((res) => {
             this.loading = false
-            this.$router.push({path: '/dashboard'})
+            this.$router.push({path: '/european-table'})
           }).catch((err) => {
             this.loading = false
           })

@@ -41,8 +41,8 @@
       </el-table-column>
       <el-table-column :label="$t('table.actions')" align="center" width="300" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">{{ $t('table.edit') }}</el-button>
-          <el-button size="mini" type="danger" @click="handleModifyStatus(scope.row,'deleted')">{{ $t('table.delete') }}</el-button>
+          <el-button type="primary" :disabled="curAdminType !== '1'" size="mini" @click="handleUpdate(scope.row)">{{ $t('table.edit') }}</el-button>
+          <el-button size="mini" :disabled="curAdminType !== '1'" type="danger" @click="handleModifyStatus(scope.row,'deleted')">{{ $t('table.delete') }}</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -85,6 +85,7 @@
 <script>
 import { mapGetters } from 'vuex'
 import moment from 'moment'
+import md5 from 'md5'
 import {getAdminRole} from '@/utils/auth'
 import { Message, MessageBox } from 'element-ui'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
@@ -215,6 +216,7 @@ export default {
       this.tempAdminData={}
       this.dataForm.status = this.switchValue ? 1 : 2
       this.dataForm.adminType = this.adminType
+      this.dataForm.adminPassword = md5(this.dataForm.adminPassword)
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           let params = {
@@ -248,6 +250,7 @@ export default {
     updateData() {
       this.dataForm.status = this.switchValue ? 1 : 2
       this.dataForm.adminType = this.adminType
+      this.dataForm.adminPassword = md5(this.dataForm.adminPassword)
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           let params = {

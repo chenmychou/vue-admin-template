@@ -69,7 +69,7 @@
       </el-table-column>
       <el-table-column :label="$t('table.questionTime')" align="center" width="100">
         <template slot-scope="scope">
-          <span>{{ scope.row.createTime }}</span>
+          <span>{{ scope.row.createTime ? moment.unix(scope.row.createTime).format("YYYY-MM-DD hh:mm:ss") : "暂无"}}</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.actions')" align="center" width="300" class-name="small-padding fixed-width">
@@ -102,7 +102,7 @@
       </el-table-column>
       <el-table-column :label="$t('table.commetTime')" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.createTime }}</span>
+          <span>{{ scope.row.createTime ? moment.unix(scope.row.createTime).format("YYYY-MM-DD hh:mm:ss") : "暂无"}}</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.commetStatus')" align="center" width="180">
@@ -152,10 +152,10 @@
           <span v-if="temp.questionStatus === 2">审核失败</span>
       </el-form-item>
       <el-form-item :label="$t('table.questionPics')">
-          <span>{{ temp.pics }}</span>
+          <span v-if="temp.pic"><img v-for="item in (temp.pic.split(','))" :src="item" alt=""></span>
       </el-form-item>
       <el-form-item :label="$t('table.questionTime')">
-        <span>{{ temp.createTime }}</span>
+        <span>{{ temp.createTime ? moment.unix(temp.createTime).format("YYYY-MM-DD hh:mm:ss") : "暂无"}}</span>
       </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -174,7 +174,7 @@
             <span>{{ temp.commentContent }}</span>
         </el-form-item>
         <el-form-item :label="$t('table.commetTime')" align="center">
-            <span>{{ temp.createTime }}</span>
+          <span>{{ temp.createTime ? moment.unix(temp.createTime).format("YYYY-MM-DD hh:mm:ss") : "暂无"}}</span>
         </el-form-item>
         <el-form-item :label="$t('table.commetStatus')" align="center">
           <span v-if="temp.status === 0">待审核</span>
@@ -184,11 +184,9 @@
         <el-form-item :label="$t('table.commentId')" align="center">
             <span>{{ temp.commentId }}</span>
         </el-form-item>
-        <el-form-item :label="$t('table.userHeadImg')" align="center" min-width="300">
-            <span>{{ temp.userHeadImg }}</span>
-        </el-form-item>
         <el-form-item :label="$t('table.userHeadImg')" align="center">
-            <span>{{ temp.userHeadImg }}</span>
+            <!-- <span>{{ temp.userHeadImg }}</span> -->
+            <span><img width="100" height="100" :src="temp.userHeadImg" alt=""></span>
         </el-form-item>
         <el-form-item :label="$t('table.replyUserName')" align="center">
             <span>{{ temp.replyUserName }}</span>
@@ -229,6 +227,7 @@ export default {
         { tabName: '问题列表', type: 1, active: true },
         { tabName: '评论列表', type: 2, active: false }
       ],
+      moment: moment,
       allowCheckValue: false,
       allowStatus: '0',
       curTab: 1,
@@ -287,6 +286,9 @@ export default {
       this.allowStatus = val
       this.getList()
     }
+  },
+  destroyed() {
+    this.curTab = 1
   },
   methods: {
     changeTab(item) {
@@ -392,8 +394,9 @@ export default {
       }
       this.$store.dispatch("GetDetail", params).then( res => {
         this.temp = this.detailData
-        this.temp.createTime = moment.unix(this.detailData.createTime).format("YYYY-MM-DD hh:mm:ss")
-        this.temp.commentPics = this.detailData.commentPics.split(',')
+        console.log('thisTemp====', this.temp)
+        this.temp.createTime = this.detailData.createTime
+        this.temp.commentPics = this.detailData.commentPics&&this.detailData.commentPics.split(',')
       })
     },
     checkDetailSubmit () {

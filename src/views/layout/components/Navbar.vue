@@ -2,7 +2,7 @@
   <div class="navbar">
     <hamburger :toggle-click="toggleSideBar" :is-active="sidebar.opened" class="hamburger-container"/>
     <!-- <breadcrumb class="breadcrumb-container"/> -->
-    <div class="navbar-title">罐头食品标准数据库管理后台</div>
+    <div class="navbar-title">质检除标数据库管理后台</div>
     <div class="right-menu">
       <span class="role_name">
         {{ todayDate }}
