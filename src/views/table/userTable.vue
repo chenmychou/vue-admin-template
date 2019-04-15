@@ -62,16 +62,14 @@
       fit
       highlight-current-row
       style="width: 100%;margin-top: 8px">
-      <el-table-column :label="$t('table.headImg')"  align="center">
+      <el-table-column label="企业名称"  align="center">
         <template slot-scope="scope">
-          <span>
-            <img width="40" height="40" :src="scope.row.headImg" />
-          </span>
+          <span>{{ scope.row.companyName }}</span>
         </template>
       </el-table-column>
-      <el-table-column :label="$t('table.userId')"  align="center">
+      <el-table-column label="登录账号"  align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.userId }}</span>
+          <span>{{ scope.row.account }}</span>
         </template>
       </el-table-column>
       <el-table-column :label="$t('table.userName')" align="center">
@@ -180,7 +178,7 @@
       </el-table-column>
     </el-table>
     <!-- 专家 end-->
-    <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :pageSize.sync="listQuery.pageSize" @pagination="getList" />
+    <pagination v-show="totals>0" :total="totals" :page.sync="listQuery.page" :pageSize.sync="listQuery.pageSize" @pagination="getList" />
     <el-dialog title="企业用户模糊查询" :visible.sync="dialogSearchVisible">
       <el-form :model="searchObject" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
         <el-form-item :label="$t('table.companyName')">
@@ -622,11 +620,6 @@ export default {
     getList() {
       this.listLoading = true
       let tempUrl = ''
-      this.listQuery = Object.assign({}, {
-        // 列表初始化条件
-        page: 1,
-        pageSize: 10
-      })
       if (this.curTab === 1) {
         tempUrl = '/sys/company/list'
         this.listQuery.content = this.searchContent
@@ -640,10 +633,14 @@ export default {
         this.listQuery.content = this.searchContent
       }
       let params = {
-        listQuery: {...this.listQuery},
+        listQuery: this.listQuery,
         fetchUrl: tempUrl
       }
       this.$store.dispatch("GetList", params).then( res => {
+        this.list = this.items
+        this.listLoading = false
+        // this.listQuery = this.listQuerys
+        this.total = this.totals
         this.list = this.items
         if (this.curTab === 1) {
           this.$store.dispatch('StoreCurCompanyData', this.items).then( res => {
@@ -651,11 +648,11 @@ export default {
           })
         }
         this.listLoading = false
-        this.listQuery = {
-          // 搜索完成初始化条件
-          page: 1,
-          pageSize: 10
-        }
+        // this.listQuery = {
+        //   // 搜索完成初始化条件
+        //   page: 1,
+        //   pageSize: 10
+        // }
       })
     },
     handlerSearchFilter() {

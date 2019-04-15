@@ -55,7 +55,7 @@ export default {
     },
     logout() {
         MessageBox.confirm(
-          '你已被登出，可以取消继续留在该页面，或者重新登录',
+          '确定退出登录重新登录吗？',
           '确定登出',
           {
             confirmButtonText: '重新登录',

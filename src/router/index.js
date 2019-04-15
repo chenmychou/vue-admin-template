@@ -55,7 +55,7 @@ export const constantRouterMap = [
         path: '',
         component: () => import('@/views/table/publicTable'),
         name: 'europeanTable',
-        meta: { title: '中国VS欧盟标准', icon: 'oumeng' }
+        meta: { title: '欧盟-化妆品', icon: 'oumeng' }
       }
     ]
   },
@@ -68,7 +68,7 @@ export const constantRouterMap = [
         path: '',
         component: () => import('@/views/table/publicTable'),
         name: 'koreaTable',
-        meta: { title: '中国VS韩国标准', icon: 'america' }
+        meta: { title: '韩国-化妆品', icon: 'america' }
       }
     ]
   },

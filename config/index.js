@@ -11,8 +11,8 @@ module.exports = {
     assetsPublicPath: '/',
     proxyTable: {
       '/sys': {
-        // target: 'http://124.193.187.101:8095/',
-        target: 'http://39.105.179.69:8095/',  //目标接口域名
+        target: 'http://124.193.187.101:8095/',
+        // target: 'http://39.105.179.69:8095/',  //目标接口域名
         changeOrigin: true,  //是否跨域
         // pathRewrite: {
         //   '^/sys': ''   //重写接口

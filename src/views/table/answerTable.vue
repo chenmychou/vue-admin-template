@@ -152,7 +152,7 @@
           <span v-if="temp.questionStatus === 2">审核失败</span>
       </el-form-item>
       <el-form-item :label="$t('table.questionPics')">
-          <span v-if="temp.pic"><img v-for="item in (temp.pic.split(','))" :src="item" alt=""></span>
+          <span v-if="temp.pic"><img width='400' height="400" v-for="item in (temp.pic.split(','))" :src="item" alt=""></span>
       </el-form-item>
       <el-form-item :label="$t('table.questionTime')">
         <span>{{ temp.createTime ? moment.unix(temp.createTime).format("YYYY-MM-DD hh:mm:ss") : "暂无"}}</span>

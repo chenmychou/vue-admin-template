@@ -62,8 +62,11 @@
     <pagination v-show="totals>0" :total="totals" :page.sync="listQuery.page" :pageSize.sync="listQuery.pageSize" @pagination="getList" />
     <el-dialog title="高级检索" :visible.sync="dialogFormSearchVisible">
       <el-form :model="searchObject" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
-        <el-form-item :label="curTab < 6 ? '欧盟序号':'韩国序号'" align="center" width="105">
-            <el-input v-model="searchObject.uid"/>
+        <el-form-item v-if="curTab < 6" label="欧盟序号" align="center" width="105">
+            <el-input v-model="searchObject.oumengUid"/>
+        </el-form-item>
+        <el-form-item v-if="curTab >= 6" label="韩国序号" align="center" width="105">
+            <el-input v-model="searchObject.hanUid"/>
         </el-form-item>
         <el-form-item :label="fieldData.list.chinaName" align="center">
             <el-input v-model="searchObject.chinaName"/>
@@ -88,8 +91,11 @@
     </el-dialog>
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form ref="dataFormOp" :rules="rules" :model="tempDetailData" label-position="left" label-width="120px" style="width: 400px; margin-left:50px;">
-        <el-form-item :label="curTab < 6 ? '欧盟序号':'韩国序号'" prop="uid">
-            <el-input v-model="tempDetailData.uid"/>
+        <el-form-item v-if="curTab >= 6" label="韩国序号" prop="uid">
+            <el-input v-model="tempDetailData.hanUid"/>
+        </el-form-item>
+        <el-form-item v-if="curTab < 6" label="欧盟序号" prop="uid">
+            <el-input v-model="tempDetailData.oumengUid"/>
         </el-form-item>
         <el-form-item :label="fieldData.detail.chinaName" prop="chinaName">
             <el-input v-model="tempDetailData.chinaName"/>
@@ -139,7 +145,10 @@
         <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">{{ $t('table.confirm') }}</el-button>
       </div>
     </el-dialog>
-    <el-dialog :title="textMap['allImport']" :visible.sync="allImportVisible">
+    <el-dialog :title="textMap['allImport']" :visible.sync="allImportVisible"
+      v-loading="uploadLoading"
+      element-loading-text="拼命上传中..."
+      element-loading-spinner="el-icon-loading">
       <div style="with:100%">
         <div style="margin-bottom: 20px">已有模板，直接导入</div>
           <el-upload
@@ -147,6 +156,7 @@
             :action="uploadUrl()"
             ref="upload"
             :on-progress="uploadProgress"
+            :on-error="uploadError"
             :headers="{token}"
             :data="{kinds: curTab}"
             :on-preview="handlePreview"
@@ -286,20 +296,21 @@ export default {
   data() {
     return {
       tabs: this.$route.path === '/european-table' ? [ // 欧盟
-    { tabName: '禁用成分', kinds: 1, active: true},
-    { tabName: '限用成分', kinds: 2, active: false},
-    { tabName: '着色剂', kinds: 3, active: false},
-    { tabName: '防腐剂', kinds: 4, active: false },
-    { tabName: '防晒剂', kinds: 5, active: false }
+    { tabName: '禁用组分', kinds: 1, active: true},
+    { tabName: '限用组分', kinds: 2, active: false},
+    { tabName: '准用着色剂', kinds: 3, active: false},
+    { tabName: '准用防腐剂', kinds: 4, active: false },
+    { tabName: '准用防晒剂', kinds: 5, active: false }
   ] : [ // 韩国
-    { tabName: '禁用成分', kinds: 6, active: true },
-    { tabName: '限用成分', kinds: 7, active: false },
-    { tabName: '防晒剂', kinds: 8, active: false },
-    { tabName: '染发剂', kinds: 9, active: false },
+    { tabName: '禁用组分', kinds: 6, active: true },
+    { tabName: '准用防腐剂', kinds: 7, active: false },
+    { tabName: '准用防晒剂', kinds: 8, active: false },
+    { tabName: '准用染发剂', kinds: 9, active: false },
     { tabName: '其他准用成分', kinds: 10, active: false },
     { tabName: '准用色素', kinds: 11, active: false }
   ],
       search: '',
+      uploadLoading: false,
       tableKey: 0,
       curTab: this.$route.path === '/european-table' ? 1 : 6,
       list: [],
@@ -332,7 +343,8 @@ export default {
         "sourceSkin": "",
       },
       searchObject: { // 搜索
-        uid: '', // 欧盟/韩国序号
+        oumengUid: '', // 欧盟/韩国序号
+        hanUid: '',
         chinaName: '', //中文名
         englishName: '', // 英文名
         sourceCas: '', // cas
@@ -393,11 +405,22 @@ export default {
       this.getList()
     },
     uploadUrl(){
-      var url = process.env.BASE_API + `/sys/source/file?kinds=${this.curTab}` // 生产环境和开发环境的判断
+      // var url = process.env.BASE_API + `/sys/source/file?kinds=${this.curTab}` 
+      var url = `/sys/source/file?kinds=${this.curTab}` // 生产环境和开发环境的判断
+      // 生产环境和开发环境的判断
       return url
     },
     uploadProgress(e, file, filelist){
-      console.log('e, file, filelist', e, file, filelist)
+
+    },
+    uploadError() {
+      this.$notify({
+        title: '错误',
+        message: '上传失败',
+        type: 'fail',
+        duration: 2000
+      })
+      this.uploadLoading = false
     },
     uploadSuccess(){
       this.$notify({
@@ -406,10 +429,13 @@ export default {
         type: 'success',
         duration: 2000
       })
+      this.uploadLoading = false
+      this.getList()
       this.fileList = []
       this.allImportVisible = false
     },
     submitUpload(file) {
+      this.uploadLoading = true
       this.$refs.upload.submit();
     },
     handleRemove(file, fileList) {
@@ -439,6 +465,7 @@ export default {
       })
     },
     globeSearch() {
+      this.searchObject.sourceType = this.curTab < 6 ? 1 : 2
       this.listQuery = Object.assign({...this.listQuery}, {...this.searchObject} )
       this.getList()
       this.dialogFormSearchVisible = false
@@ -448,14 +475,18 @@ export default {
       let kinds = this.curTab
       this.tempDetailData.sourceType = this.curTab < 6 ? 1 : 2
       this.listQuery.kinds = kinds
-      this.listQuery = Object.assign({...this.listQuery}, {...this.tempListData} )
+      let mergeListQuery = Object.assign({...this.listQuery}, {...this.tempListData} )
       let params = {
-        listQuery: {...this.listQuery},
+        listQuery: {...mergeListQuery},
         fetchUrl: "/sys/source/list"
       }
       this.$store.dispatch("GetList", params).then( res => {
         this.list = this.items
         this.listLoading = false
+        this.listQuery.content = ''
+        this.listQuery.oumengUid= ''
+        this.listQuery.hanUid= ''
+        this.listQuery.sourceType= ''
       })
     },
     handlerMoreDelete() {
@@ -597,16 +628,16 @@ export default {
     '$route': {
       handler: function(newVal, oldVal){
         this.tabs = newVal.path === '/european-table' ? [ // 欧盟
-    { tabName: '禁用成分', kinds: 1, active: true},
-    { tabName: '限用成分', kinds: 2, active: false},
-    { tabName: '着色剂', kinds: 3, active: false},
-    { tabName: '防腐剂', kinds: 4, active: false },
-    { tabName: '防晒剂', kinds: 5, active: false }
+    { tabName: '禁用组分', kinds: 1, active: true},
+    { tabName: '限用组分', kinds: 2, active: false},
+    { tabName: '准用着色剂', kinds: 3, active: false},
+    { tabName: '准用防腐剂', kinds: 4, active: false },
+    { tabName: '准用防晒剂', kinds: 5, active: false }
   ] : [ // 韩国
-    { tabName: '禁用成分', kinds: 6, active: true },
-    { tabName: '限用成分', kinds: 7, active: false },
-    { tabName: '防晒剂', kinds: 8, active: false },
-    { tabName: '染发剂', kinds: 9, active: false },
+    { tabName: '禁用组分', kinds: 6, active: true },
+    { tabName: '准用防腐剂', kinds: 7, active: false },
+    { tabName: '准用防晒剂', kinds: 8, active: false },
+    { tabName: '准用染发剂', kinds: 9, active: false },
     { tabName: '其他准用成分', kinds: 10, active: false },
     { tabName: '准用色素', kinds: 11, active: false }
   ],
